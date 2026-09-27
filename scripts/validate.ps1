@@ -25,7 +25,7 @@ try {
         $test += @('--coverage', '--coverage-output-format', 'xml', '--coverage-output', (Join-Path $coverage 'coverage.xml'), '--coverage-settings', (Join-Path $root 'scripts/code-coverage.settings.xml'))
     }
     Invoke-ValidationCommand dotnet $test
-    foreach ($script in @('tests/ReleaseUnits.Tests.ps1', 'tests/ReleaseInfrastructure.Tests.ps1')) {
+    foreach ($script in @('tests/ReleaseUnits.Tests.ps1', 'tests/NuGetPublicationPreflight.Tests.ps1', 'tests/ReleaseInfrastructure.Tests.ps1')) {
         Invoke-ValidationCommand pwsh @('-NoProfile', '-File', $script)
     }
 }

@@ -9,12 +9,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-Import-Module (Join-Path $PSScriptRoot 'ReleaseUnits.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'NuGetPublication.psm1') -Force
-$unit = Get-HmProviderReleaseUnit -Name $ReleaseUnit
-if (-not $unit.PublicationEnabled) { throw "Provider release unit '$ReleaseUnit' is not enabled for publication." }
-& (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $PackageDirectory -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit
-& (Join-Path $PSScriptRoot 'Assert-ReleaseArtifactManifest.ps1') -PackageDirectory $PackageDirectory -PackageId $unit.PackageId -ReleaseVersion $ReleaseVersion
+
+$unit = Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $PackageDirectory -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit
 
 $temporary = Join-Path ([IO.Path]::GetTempPath()) "hm-provider-nuget-$([Guid]::NewGuid())"
 try {
