@@ -25,6 +25,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Cache Sonar packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.sonar/cache
@@ -32,9 +33,11 @@ jobs:
           restore-keys: sonar-${{ runner.os }}
 
       - name: Install SonarScanner for .NET
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: dotnet tool install --tool-path .sonar/scanner dotnet-sonarscanner --version 11.3.0
 
       - name: Begin SonarQube Cloud analysis
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -54,6 +57,7 @@ jobs:
         run: ./scripts/validate.ps1 -CollectCoverage
 
       - name: Complete analysis and enforce Quality Gate
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
