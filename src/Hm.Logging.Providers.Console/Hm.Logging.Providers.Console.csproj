@@ -29,7 +29,12 @@
 
   <ItemGroup>
     <PackageReference Include="HDev.Hm.Logging.Core" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hm.Logging.Providers.Console.Tests" />
   </ItemGroup>
 
   <ItemGroup>

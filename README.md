@@ -12,12 +12,14 @@ Providers are independently consumable and independently versioned. Applications
 
 | Provider | Package | Status |
 | --- | --- | --- |
-| Console | `HDev.Hm.Logging.Providers.Console` | Foundation only; not published or ready for use |
+| Console | `HDev.Hm.Logging.Providers.Console` | V1 implemented; publication remains disabled pending approval |
 | Files | — | Planned |
 | ElasticSearch | — | Planned; detailed architecture pending |
 | EntityFramework | — | Planned; detailed architecture pending |
 
-The repository currently establishes the solution, package, Quality, Delivery, and documentation foundation for Console. It intentionally contains no functional Console provider behavior yet.
+Console V1 provides Text and Json output, configurable text timestamps and exception presentation,
+deterministic structured metadata, ANSI text colors, and severity-based stdout/stderr routing. See the
+[Console package documentation](src/Hm.Logging.Providers.Console/README.md) for configuration and usage.
 
 ## Development
 
@@ -33,4 +35,4 @@ Enable the repository-managed pre-commit validation hook:
 ./scripts/install-hooks.ps1
 ```
 
-Release publication is disabled for the Console release unit until its implementation, tests, and user documentation are complete and explicitly approved.
+Release publication remains disabled for the Console release unit until it is explicitly approved.
