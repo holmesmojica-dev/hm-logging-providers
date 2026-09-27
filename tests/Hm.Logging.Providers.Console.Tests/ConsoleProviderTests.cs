@@ -508,6 +508,57 @@ public sealed class ConsoleProviderTests
         Assert.All(writer.Writes, output => Assert.Equal(1, CountOccurrences(output, "message-")));
     }
 
+    [Theory]
+    [InlineData(LogLevel.Information, false)]
+    [InlineData(LogLevel.Error, true)]
+    public async Task DisposeWaitsForActiveWriteAndRejectsNewWrites(LogLevel level, bool standardError)
+    {
+        var writer = new BlockingConsoleWriter();
+        var provider = new ConsoleProvider(new ConsoleProviderOptions { UseColors = false }, writer);
+        Task activeWrite = provider.WriteAsync(
+            CreateEntry() with { Level = level },
+            TestContext.Current.CancellationToken);
+        await writer.WaitUntilEnteredAsync(standardError, TestContext.Current.CancellationToken);
+
+        var dispose = Task.Run(provider.Dispose, TestContext.Current.CancellationToken);
+        Assert.True(SpinWait.SpinUntil(() => provider.IsDisposalStarted, TimeSpan.FromSeconds(5)));
+        var concurrentDispose = Task.Run(provider.Dispose, TestContext.Current.CancellationToken);
+        Assert.False(dispose.IsCompleted);
+        Assert.False(concurrentDispose.IsCompleted);
+
+        _ = await Assert.ThrowsAsync<ObjectDisposedException>(() =>
+            provider.WriteAsync(CreateEntry(), TestContext.Current.CancellationToken));
+
+        writer.Release(standardError);
+        await activeWrite;
+        await Task.WhenAll(dispose, concurrentDispose);
+
+        provider.Dispose();
+    }
+
+    [Fact]
+    public async Task StandardOutputAndErrorRemainIndependentDuringConcurrentWrites()
+    {
+        var writer = new BlockingConsoleWriter();
+        using var provider = new ConsoleProvider(
+            new ConsoleProviderOptions { UseColors = false },
+            writer);
+
+        Task standardOutputWrite = provider.WriteAsync(
+            CreateEntry(),
+            TestContext.Current.CancellationToken);
+        await writer.WaitUntilEnteredAsync(false, TestContext.Current.CancellationToken);
+
+        Task standardErrorWrite = provider.WriteAsync(
+            CreateEntry() with { Level = LogLevel.Error },
+            TestContext.Current.CancellationToken);
+        await writer.WaitUntilEnteredAsync(true, TestContext.Current.CancellationToken);
+
+        writer.Release(false);
+        writer.Release(true);
+        await Task.WhenAll(standardOutputWrite, standardErrorWrite);
+    }
+
     private static ConsoleProvider CreateProvider(
         IConsoleWriter writer,
         Action<ConsoleProviderOptions>? configure = null)
@@ -604,6 +655,34 @@ public sealed class ConsoleProviderTests
                 }
             }
             while (Interlocked.CompareExchange(ref _maximumConcurrentStandardOutputWrites, candidate, current) != current);
+        }
+    }
+
+    private sealed class BlockingConsoleWriter : IConsoleWriter
+    {
+        private readonly TaskCompletionSource _standardErrorEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _standardErrorRelease = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _standardOutputEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _standardOutputRelease = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async ValueTask WriteAsync(bool standardError, string value, CancellationToken cancellationToken)
+        {
+            TaskCompletionSource entered = standardError ? _standardErrorEntered : _standardOutputEntered;
+            TaskCompletionSource release = standardError ? _standardErrorRelease : _standardOutputRelease;
+            _ = entered.TrySetResult();
+            await release.Task.WaitAsync(cancellationToken);
+        }
+
+        public Task WaitUntilEnteredAsync(bool standardError, CancellationToken cancellationToken)
+        {
+            TaskCompletionSource entered = standardError ? _standardErrorEntered : _standardOutputEntered;
+            return entered.Task.WaitAsync(cancellationToken);
+        }
+
+        public void Release(bool standardError)
+        {
+            TaskCompletionSource release = standardError ? _standardErrorRelease : _standardOutputRelease;
+            _ = release.TrySetResult();
         }
     }
 

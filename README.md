@@ -1,32 +1,56 @@
 # Hm.Logging.Providers
 
-Official destination adapters for the [HM Logging Core](https://github.com/holmesmojica-dev/hm-logging) pipeline.
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=holmesmojica-dev_hm-logging-providers&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=holmesmojica-dev_hm-logging-providers)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=holmesmojica-dev_hm-logging-providers&metric=coverage)](https://sonarcloud.io/summary/new_code?id=holmesmojica-dev_hm-logging-providers)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/)
 
-Core owns log validation, normalization, context enrichment, provider orchestration, cancellation flow, and provider-failure isolation. Each provider package depends on Core and adapts the resulting `LogEntry` to exactly one destination. Providers do not depend on Contracts, Service, or one another.
+Official destination adapters for the [HM Logging Core](https://github.com/holmesmojica-dev/hm-logging)
+pipeline.
+
+HM Logging Core owns entry validation and normalization, context enrichment, provider orchestration,
+cancellation flow, and provider-failure isolation. This repository supplies destination-specific adapters
+that receive those normalized entries, translate them for one destination, and perform the destination write.
 
 ## Package model
 
-Providers are independently consumable and independently versioned. Applications install Core and only the destination packages they need; provider packages will register themselves through chainable `IServiceCollection` methods named `AddLoggingXxx(...)` when their implementations are available.
+Each provider is an independently versioned and consumed NuGet package. Applications install Core and only
+the providers they need. Registration is explicit through each package's `IServiceCollection` extension;
+installing a package does not register Core or its provider automatically.
 
-## Provider status
+A normal application composes Core and a provider during service registration. For example, once the Console
+package has a published release:
+
+```csharp
+using Hm.Logging.Extensions;
+
+services
+    .AddHmLogging()
+    .AddLoggingConsole();
+```
+
+Providers do not depend on one another, HM Logging Contracts, or a logging service implementation. Multiple
+providers can coexist, and Core dispatches each normalized entry to every registered `ILogProvider`.
+
+## Provider catalog
 
 | Provider | Package | Status |
 | --- | --- | --- |
-| Console | `HDev.Hm.Logging.Providers.Console` | V1 implemented; publication remains disabled pending approval |
+| Console | `HDev.Hm.Logging.Providers.Console` | V1 implemented and under final review; not published |
 | Files | — | Planned |
 | ElasticSearch | — | Planned; detailed architecture pending |
 | EntityFramework | — | Planned; detailed architecture pending |
 
-Console V1 provides Text and Json output, configurable text timestamps and exception presentation,
-deterministic structured metadata, ANSI text colors, and severity-based stdout/stderr routing. See the
-[Console package documentation](src/Hm.Logging.Providers.Console/README.md) for configuration and usage.
+See the [Console provider guide](src/Hm.Logging.Providers.Console/README.md) for its configuration, output,
+routing, and operational behavior.
 
 ## Development
 
-Run the complete local validation baseline:
+The solution targets .NET 10. Run the complete local validation baseline, including restore/audit, formatting,
+Release build, tests, and release-infrastructure tests:
 
 ```powershell
-./scripts/validate.ps1
+./scripts/validate.ps1 -CollectCoverage
 ```
 
 Enable the repository-managed pre-commit validation hook:
@@ -35,4 +59,5 @@ Enable the repository-managed pre-commit validation hook:
 ./scripts/install-hooks.ps1
 ```
 
-Release publication remains disabled for the Console release unit until it is explicitly approved.
+Provider publication is controlled independently by the explicit release-unit registry and Delivery preflight.
+Console publication remains disabled until separately approved.
