@@ -1,17 +1,17 @@
 namespace Hm.Logging.Providers.Console.Configuration;
 
 /// <summary>
-/// Specifies the output representation used by the Console provider.
+/// Specifies the destination representation emitted for each Console log entry.
 /// </summary>
 public enum ConsoleOutputFormat
 {
     /// <summary>
-    /// Human-readable text output.
+    /// Human-readable, optionally colored text intended for terminals and captured standard streams.
     /// </summary>
     Text = 0,
 
     /// <summary>
-    /// Structured JSON output.
+    /// Structured JSON with semantic level names, ISO 8601 timestamps, and no ANSI color sequences.
     /// </summary>
     Json = 1
 }
