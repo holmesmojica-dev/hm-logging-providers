@@ -16,7 +16,9 @@ $unit = Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $Packag
 $temporary = Join-Path ([IO.Path]::GetTempPath()) "hm-provider-nuget-$([Guid]::NewGuid())"
 try {
     New-Item -ItemType Directory -Path $temporary | Out-Null
-    $remote = Join-Path $temporary (Get-HmProviderNuGetPackageName -PackageId $unit.PackageId -ReleaseVersion $ReleaseVersion)
+    $packageName = Get-HmProviderNuGetPackageName -PackageId $unit.PackageId -ReleaseVersion $ReleaseVersion
+    $local = Join-Path $PackageDirectory $packageName
+    $remote = Join-Path $temporary $packageName
     $exists = $false
     try { Invoke-WebRequest -Uri (Get-HmProviderNuGetPackageUri -PackageId $unit.PackageId -ReleaseVersion $ReleaseVersion) -OutFile $remote -TimeoutSec 30; $exists = $true }
     catch {
@@ -25,7 +27,12 @@ try {
     }
     $identityMatches = $false
     if ($exists) {
-        try { & (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $temporary -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit -SkipSymbolPackage; $identityMatches = $true } catch { $identityMatches = $false }
+        try {
+            & (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $temporary -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit -SkipSymbolPackage
+            Assert-HmProviderNuGetContentIdentity -LocalPackagePath $local -RemotePackagePath $remote
+            $identityMatches = $true
+        }
+        catch { $identityMatches = $false }
     }
     $decision = Resolve-HmProviderNuGetDecision -PackageExists $exists -IdentityMatches $identityMatches
     @("nuget_state=$decision") | Add-Content -LiteralPath $GitHubOutputPath

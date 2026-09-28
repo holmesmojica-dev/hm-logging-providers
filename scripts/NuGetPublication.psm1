@@ -31,6 +31,19 @@ function Get-HmProviderNuGetPackageUri {
     return "https://api.nuget.org/v3-flatcontainer/$($PackageId.ToLowerInvariant())/$($ReleaseVersion.ToLowerInvariant())/$name"
 }
 
+function Assert-HmProviderNuGetContentIdentity {
+    param(
+        [Parameter(Mandatory)][string]$LocalPackagePath,
+        [Parameter(Mandatory)][string]$RemotePackagePath
+    )
+
+    $tool = Join-Path (Split-Path $PSScriptRoot -Parent) 'tools/Hm.Logging.Providers.ReleaseTools/Hm.Logging.Providers.ReleaseTools.csproj'
+    & dotnet run --project $tool --configuration Release --no-launch-profile -- assert-content-identity $LocalPackagePath $RemotePackagePath
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The existing NuGet package does not match the validated local package content identity.'
+    }
+}
+
 function Resolve-HmProviderNuGetDecision {
     param([Parameter(Mandatory)][bool]$PackageExists, [Parameter(Mandatory)][bool]$IdentityMatches)
     if (-not $PackageExists) { return 'publish' }
@@ -40,4 +53,4 @@ function Resolve-HmProviderNuGetDecision {
 
 function Test-HmNuGetNotFoundStatusCode { param([object]$StatusCode); return $null -ne $StatusCode -and [int]$StatusCode -eq 404 }
 
-Export-ModuleMember -Function Assert-HmProviderNuGetPublicationPrerequisites, Get-HmProviderNuGetPackageName, Get-HmProviderNuGetPackageUri, Resolve-HmProviderNuGetDecision, Test-HmNuGetNotFoundStatusCode
+Export-ModuleMember -Function Assert-HmProviderNuGetPublicationPrerequisites, Assert-HmProviderNuGetContentIdentity, Get-HmProviderNuGetPackageName, Get-HmProviderNuGetPackageUri, Resolve-HmProviderNuGetDecision, Test-HmNuGetNotFoundStatusCode

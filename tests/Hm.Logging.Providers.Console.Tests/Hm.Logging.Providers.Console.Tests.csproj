@@ -12,5 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hm.Logging.Providers.Console\Hm.Logging.Providers.Console.csproj" />
+    <ProjectReference Include="..\..\tools\Hm.Logging.Providers.ReleaseTools\Hm.Logging.Providers.ReleaseTools.csproj" />
   </ItemGroup>
 </Project>
