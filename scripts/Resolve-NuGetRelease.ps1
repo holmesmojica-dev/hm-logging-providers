@@ -23,11 +23,11 @@ try {
         $status = if ($null -ne $_.Exception.Response) { $_.Exception.Response.StatusCode } else { $null }
         if (-not (Test-HmNuGetNotFoundStatusCode $status)) { throw }
     }
-    $matches = $false
+    $identityMatches = $false
     if ($exists) {
-        try { & (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $temporary -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit -SkipSymbolPackage; $matches = $true } catch { $matches = $false }
+        try { & (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $temporary -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit -SkipSymbolPackage; $identityMatches = $true } catch { $identityMatches = $false }
     }
-    $decision = Resolve-HmProviderNuGetDecision -PackageExists $exists -IdentityMatches $matches
+    $decision = Resolve-HmProviderNuGetDecision -PackageExists $exists -IdentityMatches $identityMatches
     @("nuget_state=$decision") | Add-Content -LiteralPath $GitHubOutputPath
 }
 finally { if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Recurse -Force } }
