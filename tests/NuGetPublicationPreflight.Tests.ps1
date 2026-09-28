@@ -76,7 +76,7 @@ try {
     $packagePath = Join-Path $packageDirectory "$packageId.$releaseVersion.nupkg"
     $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
     try {
-        $nuspec = "<package><metadata><id>$packageId</id><version>$releaseVersion</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$sourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.1'/></group></dependencies></metadata></package>"
+        $nuspec = "<package><metadata><id>$packageId</id><version>$releaseVersion</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$sourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.2'/></group></dependencies></metadata></package>"
         Add-ZipEntry $package "$packageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
         Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
         Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))

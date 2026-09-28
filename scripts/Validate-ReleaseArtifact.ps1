@@ -39,7 +39,7 @@ try {
     }
     $dependencies = @($metadata.dependencies.group.dependency)
     $core = @($dependencies | Where-Object id -ceq 'HDev.Hm.Logging.Core')
-    if ($core.Count -ne 1 -or $core[0].version -cne '1.0.0-preview.1') {
+    if ($core.Count -ne 1 -or $core[0].version -cne '1.0.0-preview.2') {
         throw 'Release package must declare the approved HDev.Hm.Logging.Core dependency baseline.'
     }
     $icon = $package.GetEntry('icon.png')
