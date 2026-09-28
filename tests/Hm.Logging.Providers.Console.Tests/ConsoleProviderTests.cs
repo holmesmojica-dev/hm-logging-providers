@@ -554,9 +554,15 @@ public sealed class ConsoleProviderTests
             TestContext.Current.CancellationToken);
         await writer.WaitUntilEnteredAsync(true, TestContext.Current.CancellationToken);
 
+        Assert.False(standardOutputWrite.IsCompleted);
+        Assert.False(standardErrorWrite.IsCompleted);
+
         writer.Release(false);
+        await standardOutputWrite;
+        Assert.False(standardErrorWrite.IsCompleted);
+
         writer.Release(true);
-        await Task.WhenAll(standardOutputWrite, standardErrorWrite);
+        await standardErrorWrite;
     }
 
     private static ConsoleProvider CreateProvider(
