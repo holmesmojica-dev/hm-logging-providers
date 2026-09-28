@@ -135,6 +135,11 @@ internal static class JsonLogEntryFormatter
 
     private static string FormatNonFinite(double value)
     {
-        return double.IsNaN(value) ? "NaN" : double.IsPositiveInfinity(value) ? "Infinity" : "-Infinity";
+        return value switch
+        {
+            _ when double.IsNaN(value) => "NaN",
+            _ when double.IsPositiveInfinity(value) => "Infinity",
+            _ => "-Infinity",
+        };
     }
 }
