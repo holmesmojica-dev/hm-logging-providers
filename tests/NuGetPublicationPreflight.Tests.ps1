@@ -113,13 +113,24 @@ try {
     $resolveScript = Get-Content -LiteralPath (Join-Path $scripts 'Resolve-NuGetRelease.ps1') -Raw
     $publishScript = Get-Content -LiteralPath (Join-Path $scripts 'Publish-NuGetRelease.ps1') -Raw
     $preflightName = 'Assert-HmProviderNuGetPublicationPrerequisites'
+    $contentIdentityName = 'Assert-HmProviderNuGetContentIdentity'
     Assert-Equal 1 ([regex]::Matches($resolveScript, $preflightName).Count)
     Assert-Equal 1 ([regex]::Matches($publishScript, $preflightName).Count)
+    Assert-Equal 1 ([regex]::Matches($resolveScript, $contentIdentityName).Count)
+    Assert-Equal 1 ([regex]::Matches($publishScript, $contentIdentityName).Count)
     if ($resolveScript.IndexOf($preflightName, [StringComparison]::Ordinal) -gt $resolveScript.IndexOf('Invoke-WebRequest', [StringComparison]::Ordinal)) {
         throw 'Resolve must execute the shared preflight before remote resolution.'
     }
     if ($publishScript.IndexOf($preflightName, [StringComparison]::Ordinal) -gt $publishScript.IndexOf('NUGET_TRUSTED_PUBLISHING_API_KEY', [StringComparison]::Ordinal)) {
         throw 'Publish must execute the shared preflight before credentialed publication.'
+    }
+    if ($resolveScript.IndexOf('Validate-ReleaseArtifact.ps1', [StringComparison]::Ordinal) -gt $resolveScript.IndexOf($contentIdentityName, [StringComparison]::Ordinal) -or
+        $resolveScript.IndexOf($contentIdentityName, [StringComparison]::Ordinal) -gt $resolveScript.IndexOf('Resolve-HmProviderNuGetDecision', [StringComparison]::Ordinal)) {
+        throw 'Resolve must validate remote structure and content identity before deciding the NuGet state.'
+    }
+    if ($publishScript.LastIndexOf('Validate-ReleaseArtifact.ps1', [StringComparison]::Ordinal) -gt $publishScript.IndexOf($contentIdentityName, [StringComparison]::Ordinal) -or
+        $publishScript.IndexOf($contentIdentityName, [StringComparison]::Ordinal) -gt $publishScript.IndexOf('nuget_state=published', [StringComparison]::Ordinal)) {
+        throw 'Publish must validate remote structure and content identity before reporting publication.'
     }
 }
 finally {
