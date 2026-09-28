@@ -1,5 +1,6 @@
 # HM Logging Console Provider
 
+[![NuGet](https://img.shields.io/nuget/vpre/HDev.Hm.Logging.Providers.Console?label=nuget)](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Console)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=holmesmojica-dev_hm-logging-providers&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=holmesmojica-dev_hm-logging-providers)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=holmesmojica-dev_hm-logging-providers&metric=coverage)](https://sonarcloud.io/summary/new_code?id=holmesmojica-dev_hm-logging-providers)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/holmesmojica-dev/hm-logging-providers/blob/main/LICENSE)
@@ -17,10 +18,10 @@ for validation, normalization, context enrichment, orchestration, and provider-f
 
 ## Installation
 
-Install a published release from NuGet with:
+Install the latest available release, including preview releases, from NuGet with:
 
 ```bash
-dotnet add package HDev.Hm.Logging.Providers.Console
+dotnet add package HDev.Hm.Logging.Providers.Console --prerelease
 ```
 
 Installing the package does not register HM Logging Core or the Console provider automatically.

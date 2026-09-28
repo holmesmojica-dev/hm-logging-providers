@@ -13,7 +13,7 @@ function Get-HmProviderReleaseUnit {
             Project = 'src/Hm.Logging.Providers.Console/Hm.Logging.Providers.Console.csproj'
             PackageId = 'HDev.Hm.Logging.Providers.Console'
             AssemblyName = 'Hm.Logging.Providers.Console'
-            PublicationEnabled = $false
+            PublicationEnabled = $true
         }
     }
 
