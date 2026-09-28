@@ -29,6 +29,7 @@ try {
         }
     }
     & (Join-Path $PSScriptRoot 'Validate-ReleaseArtifact.ps1') -PackageDirectory $temporary -ReleaseUnit $ReleaseUnit -ReleaseVersion $ReleaseVersion -SourceCommit $SourceCommit -SkipSymbolPackage
+    Assert-HmProviderNuGetContentIdentity -LocalPackagePath $package -RemotePackagePath $remote
     'nuget_state=published' | Add-Content -LiteralPath $GitHubOutputPath
 }
 finally { if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Recurse -Force } }
