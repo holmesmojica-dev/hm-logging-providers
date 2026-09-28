@@ -42,15 +42,15 @@ function Assert-HmProviderReleaseVersion {
         throw "Release version '$ReleaseVersion' must contain a canonical major.minor.patch version."
     }
 
-    if ($parts.Count -eq 2) {
-        if ([string]::IsNullOrWhiteSpace($parts[1])) { throw "Release version '$ReleaseVersion' has an empty prerelease identifier." }
-        foreach ($identifier in $parts[1].Split('.')) {
-            if ([string]::IsNullOrEmpty($identifier) -or $identifier -notmatch '^[0-9A-Za-z-]+$') {
-                throw "Release version '$ReleaseVersion' has an invalid prerelease identifier."
-            }
-            if ($identifier -match '^[0-9]+$' -and -not (Test-HmCanonicalNonNegativeInteger $identifier)) {
-                throw "Release version '$ReleaseVersion' has a prerelease numeric identifier with a leading zero."
-            }
+    if ($parts.Count -ne 2) { return }
+
+    if ([string]::IsNullOrWhiteSpace($parts[1])) { throw "Release version '$ReleaseVersion' has an empty prerelease identifier." }
+    foreach ($identifier in $parts[1].Split('.')) {
+        if ([string]::IsNullOrEmpty($identifier) -or $identifier -notmatch '^[0-9A-Za-z-]+$') {
+            throw "Release version '$ReleaseVersion' has an invalid prerelease identifier."
+        }
+        if ($identifier -match '^[0-9]+$' -and -not (Test-HmCanonicalNonNegativeInteger $identifier)) {
+            throw "Release version '$ReleaseVersion' has a prerelease numeric identifier with a leading zero."
         }
     }
 }
