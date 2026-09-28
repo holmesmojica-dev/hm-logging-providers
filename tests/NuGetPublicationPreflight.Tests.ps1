@@ -57,21 +57,26 @@ try {
     Assert-ThrowsLike {
         Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit unknown -ReleaseVersion $releaseVersion -SourceCommit $sourceCommit
     } "*Unknown or unsupported provider release unit 'unknown'.*"
-    Assert-ThrowsLike {
-        Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit console -ReleaseVersion $releaseVersion -SourceCommit $sourceCommit
-    } "*not enabled for publication*"
 
     Remove-Module NuGetPublication, ReleaseUnits -ErrorAction SilentlyContinue
     foreach ($name in @('NuGetPublication.psm1', 'Validate-ReleaseArtifact.ps1', 'Assert-ReleaseArtifactManifest.ps1', 'ReleaseArtifactIntegrity.psm1')) {
         Copy-Item -LiteralPath (Join-Path $scripts $name) -Destination (Join-Path $isolatedScripts $name)
     }
-    $releaseUnits = (Get-Content -LiteralPath (Join-Path $scripts 'ReleaseUnits.psm1') -Raw).Replace('PublicationEnabled = $false', 'PublicationEnabled = $true')
+    $releaseUnits = Get-Content -LiteralPath (Join-Path $scripts 'ReleaseUnits.psm1') -Raw
+    $disabledReleaseUnits = $releaseUnits.Replace('PublicationEnabled = $true', 'PublicationEnabled = $false')
+    [IO.File]::WriteAllText((Join-Path $isolatedScripts 'ReleaseUnits.psm1'), $disabledReleaseUnits, [Text.UTF8Encoding]::new($false))
+    Import-Module (Join-Path $isolatedScripts 'NuGetPublication.psm1') -Force
+    Assert-ThrowsLike {
+        Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit console -ReleaseVersion $releaseVersion -SourceCommit $sourceCommit
+    } "*not enabled for publication*"
+    Remove-Module NuGetPublication, ReleaseUnits -ErrorAction SilentlyContinue
+
     [IO.File]::WriteAllText((Join-Path $isolatedScripts 'ReleaseUnits.psm1'), $releaseUnits, [Text.UTF8Encoding]::new($false))
 
     $packagePath = Join-Path $packageDirectory "$packageId.$releaseVersion.nupkg"
     $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
     try {
-        $nuspec = "<package><metadata><id>$packageId</id><version>$releaseVersion</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$sourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='0.1.0-preview.9'/></group></dependencies></metadata></package>"
+        $nuspec = "<package><metadata><id>$packageId</id><version>$releaseVersion</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$sourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.1'/></group></dependencies></metadata></package>"
         Add-ZipEntry $package "$packageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
         Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
         Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))

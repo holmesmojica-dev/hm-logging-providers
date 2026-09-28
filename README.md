@@ -18,8 +18,7 @@ Each provider is an independently versioned and consumed NuGet package. Applicat
 the providers they need. Registration is explicit through each package's `IServiceCollection` extension;
 installing a package does not register Core or its provider automatically.
 
-A normal application composes Core and a provider during service registration. For example, once the Console
-package has a published release:
+A normal application composes Core and a provider during service registration. For example, with Console:
 
 ```csharp
 using Hm.Logging.Extensions;
@@ -36,7 +35,7 @@ providers can coexist, and Core dispatches each normalized entry to every regist
 
 | Provider | Package | Status |
 | --- | --- | --- |
-| Console | `HDev.Hm.Logging.Providers.Console` | V1 implemented and under final review; not published |
+| Console | [`HDev.Hm.Logging.Providers.Console`](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Console) | Available |
 | Files | — | Planned |
 | ElasticSearch | — | Planned; detailed architecture pending |
 | EntityFramework | — | Planned; detailed architecture pending |
@@ -58,6 +57,3 @@ Enable the repository-managed pre-commit validation hook:
 ```powershell
 ./scripts/install-hooks.ps1
 ```
-
-Provider publication is controlled independently by the explicit release-unit registry and Delivery preflight.
-Console publication remains disabled until separately approved.
