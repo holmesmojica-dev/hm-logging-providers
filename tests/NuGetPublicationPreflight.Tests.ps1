@@ -41,6 +41,38 @@ function Write-ArtifactManifest {
         [Text.UTF8Encoding]::new($false))
 }
 
+function Write-TestArtifacts {
+    param(
+        [string]$Directory,
+        [string]$RepositoryRoot,
+        [string]$PackageId,
+        [string]$AssemblyName,
+        [string]$Version,
+        [string]$SourceCommit
+    )
+
+    $packagePath = Join-Path $Directory "$PackageId.$Version.nupkg"
+    $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
+    try {
+        $nuspec = "<package><metadata><id>$PackageId</id><version>$Version</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$SourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.2'/></group></dependencies></metadata></package>"
+        Add-ZipEntry $package "$PackageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
+        Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
+        Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))
+        Add-ZipEntry $package 'icon.png' ([IO.File]::ReadAllBytes((Join-Path $RepositoryRoot 'icon.png')))
+        Add-ZipEntry $package "lib/net10.0/$AssemblyName.dll" ([byte[]]@(1))
+        Add-ZipEntry $package "lib/net10.0/$AssemblyName.xml" ([byte[]]@(1))
+    }
+    finally { $package.Dispose() }
+
+    $pdbPath = Join-Path $RepositoryRoot "src/$AssemblyName/bin/Release/net10.0/$AssemblyName.pdb"
+    if (-not (Test-Path -LiteralPath $pdbPath -PathType Leaf)) { throw 'Release build output is required for preflight tests.' }
+    $symbolPath = Join-Path $Directory "$PackageId.$Version.snupkg"
+    $symbols = [IO.Compression.ZipFile]::Open($symbolPath, 'Create')
+    try { Add-ZipEntry $symbols "lib/net10.0/$AssemblyName.pdb" ([IO.File]::ReadAllBytes($pdbPath)) }
+    finally { $symbols.Dispose() }
+    Write-ArtifactManifest -Directory $Directory -PackageId $PackageId -Version $Version
+}
+
 $root = (& git rev-parse --show-toplevel).Trim()
 $scripts = Join-Path $root 'scripts'
 $temporary = Join-Path ([IO.Path]::GetTempPath()) "hm-provider-preflight-$([Guid]::NewGuid().ToString('N'))"
@@ -73,26 +105,7 @@ try {
 
     [IO.File]::WriteAllText((Join-Path $isolatedScripts 'ReleaseUnits.psm1'), $releaseUnits, [Text.UTF8Encoding]::new($false))
 
-    $packagePath = Join-Path $packageDirectory "$packageId.$releaseVersion.nupkg"
-    $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
-    try {
-        $nuspec = "<package><metadata><id>$packageId</id><version>$releaseVersion</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$sourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.2'/></group></dependencies></metadata></package>"
-        Add-ZipEntry $package "$packageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
-        Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
-        Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))
-        Add-ZipEntry $package 'icon.png' ([IO.File]::ReadAllBytes((Join-Path $root 'icon.png')))
-        Add-ZipEntry $package "lib/net10.0/$assemblyName.dll" ([byte[]]@(1))
-        Add-ZipEntry $package "lib/net10.0/$assemblyName.xml" ([byte[]]@(1))
-    }
-    finally { $package.Dispose() }
-
-    $pdbPath = Join-Path $root "src/$assemblyName/bin/Release/net10.0/$assemblyName.pdb"
-    if (-not (Test-Path -LiteralPath $pdbPath -PathType Leaf)) { throw 'Release build output is required for preflight tests.' }
-    $symbolPath = Join-Path $packageDirectory "$packageId.$releaseVersion.snupkg"
-    $symbols = [IO.Compression.ZipFile]::Open($symbolPath, 'Create')
-    try { Add-ZipEntry $symbols "lib/net10.0/$assemblyName.pdb" ([IO.File]::ReadAllBytes($pdbPath)) }
-    finally { $symbols.Dispose() }
-    Write-ArtifactManifest -Directory $packageDirectory -PackageId $packageId -Version $releaseVersion
+    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $packageId -AssemblyName $assemblyName -Version $releaseVersion -SourceCommit $sourceCommit
 
     Import-Module (Join-Path $isolatedScripts 'NuGetPublication.psm1') -Force
     Assert-ThrowsLike {
@@ -109,6 +122,17 @@ try {
     Assert-Equal 'console' $unit.Name
     Assert-Equal $packageId $unit.PackageId
     Assert-Equal $true $unit.PublicationEnabled
+
+    $filesPackageId = 'HDev.Hm.Logging.Providers.Files'
+    $filesAssemblyName = 'Hm.Logging.Providers.Files'
+    $filesReleaseVersion = '2.3.4-preview.5'
+    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $filesPackageId -AssemblyName $filesAssemblyName -Version $filesReleaseVersion -SourceCommit $sourceCommit
+    $filesUnit = Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit files -ReleaseVersion $filesReleaseVersion -SourceCommit $sourceCommit
+    Assert-Equal 'files' $filesUnit.Name
+    Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $filesUnit.Project
+    Assert-Equal $filesPackageId $filesUnit.PackageId
+    Assert-Equal $filesAssemblyName $filesUnit.AssemblyName
+    Assert-Equal $true $filesUnit.PublicationEnabled
 
     $resolveScript = Get-Content -LiteralPath (Join-Path $scripts 'Resolve-NuGetRelease.ps1') -Raw
     $publishScript = Get-Content -LiteralPath (Join-Path $scripts 'Publish-NuGetRelease.ps1') -Raw
