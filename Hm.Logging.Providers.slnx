@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Hm.Logging.Providers.Console/Hm.Logging.Providers.Console.csproj" />
+    <Project Path="src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hm.Logging.Providers.Console.Tests/Hm.Logging.Providers.Console.Tests.csproj" />
+    <Project Path="tests/Hm.Logging.Providers.Files.Tests/Hm.Logging.Providers.Files.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Hm.Logging.Providers.ReleaseTools/Hm.Logging.Providers.ReleaseTools.csproj" />

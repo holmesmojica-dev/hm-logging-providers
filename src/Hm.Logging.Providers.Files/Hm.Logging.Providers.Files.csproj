@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>HDev.Hm.Logging.Providers.Files</PackageId>
+    <Title>Hm.Logging Files Provider</Title>
+    <Authors>Holmes Mojica</Authors>
+    <Company>Holmes Mojica Dev</Company>
+    <Description>File destination provider for the HM Logging ecosystem.</Description>
+    <PackageTags>logging;files;jsonl;structured-logging;observability;dotnet</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/holmesmojica-dev/hm-logging-providers</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/holmesmojica-dev/hm-logging-providers</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <DebugType>portable</DebugType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ReleaseVersion)' != ''">
+    <Version>$(ReleaseVersion)</Version>
+    <PackageVersion>$(ReleaseVersion)</PackageVersion>
+    <FileVersion>$([System.Text.RegularExpressions.Regex]::Match('$(ReleaseVersion)', '^\d+\.\d+\.\d+').Value).0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HDev.Hm.Logging.Core" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hm.Logging.Providers.Files.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <Target Name="ValidateReleaseVersion" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(ReleaseVersion)' == ''"
+           Text="ReleaseVersion must be supplied from the provider release tag when creating a package." />
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\Assert-ReleaseVersion.ps1&quot; -ReleaseVersion &quot;$(ReleaseVersion)&quot;" />
+  </Target>
+</Project>
