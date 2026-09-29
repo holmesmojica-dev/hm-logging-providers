@@ -22,7 +22,8 @@ try {
     if ($CollectCoverage) {
         $coverage = Join-Path $root 'TestResults/coverage'
         New-Item -ItemType Directory -Path $coverage -Force | Out-Null
-        $test += @('--coverage', '--coverage-output-format', 'xml', '--coverage-output', (Join-Path $coverage 'coverage.xml'), '--coverage-settings', (Join-Path $root 'scripts/code-coverage.settings.xml'))
+        Get-ChildItem -LiteralPath $coverage -Filter '*.xml' -File | Remove-Item -Force
+        $test += @('--coverage', '--coverage-output-format', 'xml', '--results-directory', $coverage, '--coverage-settings', (Join-Path $root 'scripts/code-coverage.settings.xml'))
     }
     Invoke-ValidationCommand dotnet $test
     foreach ($script in @('tests/ReleaseUnits.Tests.ps1', 'tests/NuGetPublicationPreflight.Tests.ps1', 'tests/ReleaseInfrastructure.Tests.ps1')) {

@@ -48,7 +48,7 @@ jobs:
           /d:sonar.token="$env:SONAR_TOKEN"
           /d:sonar.host.url=https://sonarcloud.io
           /d:sonar.qualitygate.wait=true
-          /d:sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage/coverage.xml
+          /d:sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage/*.xml
           /d:sonar.exclusions=**/obj/**,**/bin/**
           /d:sonar.coverage.exclusions=**/obj/**,**/bin/**
 

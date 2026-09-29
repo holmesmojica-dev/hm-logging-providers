@@ -23,7 +23,15 @@ foreach ($version in @('2.7.4-preview.9', '3.0.0', '42.1.0-rc.2')) {
     Assert-Equal $true $authorizedRelease.PublicationEnabled
 }
 
-foreach ($tag in @('files-v1.0.0', 'elasticsearch-v1.0.0', 'entityframework-v1.0.0', 'unknown-v1.0.0', 'console-v1.0', 'console-v01.0.0', 'console-v1.0.0-01', 'console-v1.0.0+build', 'Console-v1.0.0', 'v1.0.0')) {
+$files = Resolve-HmProviderReleaseTag -Tag 'files-v2.3.4-preview.5'
+Assert-Equal 'files' $files.ReleaseUnit
+Assert-Equal '2.3.4-preview.5' $files.ReleaseVersion
+Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $files.Project
+Assert-Equal 'HDev.Hm.Logging.Providers.Files' $files.PackageId
+Assert-Equal $false $files.PublicationEnabled
+Assert-Throws { Resolve-HmProviderReleaseTag -Tag 'files-v2.3.4-preview.5' -RequirePublicationEnabled }
+
+foreach ($tag in @('elasticsearch-v1.0.0', 'entityframework-v1.0.0', 'unknown-v1.0.0', 'console-v1.0', 'console-v01.0.0', 'console-v1.0.0-01', 'console-v1.0.0+build', 'Console-v1.0.0', 'v1.0.0')) {
     Assert-Throws { Resolve-HmProviderReleaseTag -Tag $tag }
 }
 Assert-Throws { Get-HmProviderReleaseUnit -Name 'Console' }

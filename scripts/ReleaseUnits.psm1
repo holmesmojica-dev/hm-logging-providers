@@ -15,6 +15,13 @@ function Get-HmProviderReleaseUnit {
             AssemblyName = 'Hm.Logging.Providers.Console'
             PublicationEnabled = $true
         }
+        files = [pscustomobject]@{
+            Name = 'files'
+            Project = 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj'
+            PackageId = 'HDev.Hm.Logging.Providers.Files'
+            AssemblyName = 'Hm.Logging.Providers.Files'
+            PublicationEnabled = $false
+        }
     }
 
     if (-not $units.ContainsKey($Name)) {
