@@ -36,12 +36,13 @@ providers can coexist, and Core dispatches each normalized entry to every regist
 | Provider | Package | Status |
 | --- | --- | --- |
 | Console | [`HDev.Hm.Logging.Providers.Console`](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Console) | Available |
-| Files | — | Planned |
+| Files | [`HDev.Hm.Logging.Providers.Files`](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Files) | Available |
 | ElasticSearch | — | Planned; detailed architecture pending |
 | EntityFramework | — | Planned; detailed architecture pending |
 
-See the [Console provider guide](src/Hm.Logging.Providers.Console/README.md) for its configuration, output,
-routing, and operational behavior.
+See the [Console provider guide](src/Hm.Logging.Providers.Console/README.md) and
+[Files provider guide](src/Hm.Logging.Providers.Files/README.md) for provider-specific configuration, output,
+and operational behavior.
 
 ## Development
 
