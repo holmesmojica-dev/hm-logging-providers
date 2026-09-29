@@ -123,12 +123,12 @@ internal sealed class FilesStorageMaintenance(FilesProviderSettings settings) : 
                      .Select(file => file.SourceDirectory)
                      .Where(static directory => directory is not null)
                      .Cast<string>()
-                     .Distinct(StringComparer.Ordinal))
+                     .Distinct(StringComparer.Ordinal)
+                     .Where(static directory =>
+                         Directory.Exists(directory) &&
+                         !Directory.EnumerateFileSystemEntries(directory).Any()))
         {
-            if (Directory.Exists(directory) && !Directory.EnumerateFileSystemEntries(directory).Any())
-            {
-                Directory.Delete(directory);
-            }
+            Directory.Delete(directory);
         }
     }
 
