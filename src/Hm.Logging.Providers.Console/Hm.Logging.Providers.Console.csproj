@@ -34,6 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Hm.Logging.Providers.Shared\Formatting\*.cs"
+             Link="Formatting\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Hm.Logging.Providers.Console.Tests" />
   </ItemGroup>
 
