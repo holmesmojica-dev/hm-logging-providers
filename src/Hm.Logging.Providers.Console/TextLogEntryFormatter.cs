@@ -14,38 +14,12 @@ internal static class TextLogEntryFormatter
     internal static string Format(LogEntry entry, ConsoleProviderSettings settings)
     {
         var builder = new StringBuilder();
-        _ = builder.Append('[');
-        _ = builder.Append(FormatTimestamp(entry.Timestamp, settings.TimestampFormat));
-        _ = builder.Append("] [");
-        AppendLevel(builder, entry.Level, settings.UseColors);
-        _ = builder.Append(']');
-
-        if (entry.Source is not null)
-        {
-            _ = builder.Append(" [");
-            _ = builder.Append(entry.Source);
-            _ = builder.Append(']');
-        }
-
-        _ = builder.Append(' ');
-        _ = builder.Append(entry.Message);
-
-        AppendOptionalLine(builder, "TraceId", entry.TraceId);
-        AppendOptionalLine(builder, "CorrelationId", entry.CorrelationId);
-
-        if (entry.Metadata is { Count: > 0 })
-        {
-            _ = builder.AppendLine();
-            _ = builder.Append("Metadata: ");
-            TextMetadataFormatter.Append(builder, entry.Metadata);
-        }
-
-        if (entry.Exception is not null)
-        {
-            _ = builder.AppendLine();
-            _ = builder.Append("Exception: ");
-            _ = builder.Append(FormatException(entry.Exception, settings.ExceptionFormat));
-        }
+        TextLogEntryWriter.Write(
+            builder,
+            entry,
+            FormatTimestamp(entry.Timestamp, settings.TimestampFormat),
+            FormatLevel(entry.Level, settings.UseColors),
+            entry.Exception is null ? null : FormatException(entry.Exception, settings.ExceptionFormat));
 
         return builder.ToString();
     }
@@ -65,19 +39,11 @@ internal static class TextLogEntryFormatter
         };
     }
 
-    private static void AppendLevel(StringBuilder builder, LogLevel level, bool useColors)
+    private static string FormatLevel(LogLevel level, bool useColors)
     {
-        if (useColors)
-        {
-            _ = builder.Append(GetLevelColor(level));
-        }
-
-        _ = builder.Append(level);
-
-        if (useColors)
-        {
-            _ = builder.Append(ResetColor);
-        }
+        return useColors
+            ? $"{GetLevelColor(level)}{level}{ResetColor}"
+            : level.ToString();
     }
 
     private static string GetLevelColor(LogLevel level)
@@ -92,19 +58,6 @@ internal static class TextLogEntryFormatter
             LogLevel.Critical => "\u001b[91m",
             _ => string.Empty
         };
-    }
-
-    private static void AppendOptionalLine(StringBuilder builder, string name, string? value)
-    {
-        if (value is null)
-        {
-            return;
-        }
-
-        _ = builder.AppendLine();
-        _ = builder.Append(name);
-        _ = builder.Append(": ");
-        _ = builder.Append(value);
     }
 
     private static string FormatException(string exception, ConsoleExceptionFormat format)
