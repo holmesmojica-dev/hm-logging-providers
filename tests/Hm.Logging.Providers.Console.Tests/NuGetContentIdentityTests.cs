@@ -92,6 +92,29 @@ public sealed class NuGetContentIdentityTests : IDisposable
         NuGetContentIdentity.AssertEquivalent(local, remote);
     }
 
+    [Fact]
+    public async Task RepositorySignedPackageWithTamperedContentFailsClosed()
+    {
+        string source = CreatePackage("source.nupkg", [1, 2, 3]);
+        string signed = Path.Combine(_directory, "signed.nupkg");
+        await RepositorySignAsync(source, signed);
+
+        using (var signedPackage = new PackageArchiveReader(signed))
+        {
+            Assert.True(await signedPackage.IsSignedAsync(TestContext.Current.CancellationToken));
+        }
+
+        using (ZipArchive package = ZipFile.Open(signed, ZipArchiveMode.Update))
+        {
+            ZipArchiveEntry? assembly = package.GetEntry("lib/net10.0/Hm.Logging.Providers.Console.dll");
+            Assert.NotNull(assembly);
+            assembly.Delete();
+            WriteEntry(package, "lib/net10.0/Hm.Logging.Providers.Console.dll", [3, 2, 1]);
+        }
+
+        _ = Assert.ThrowsAny<Exception>(() => NuGetContentIdentity.GetContentHash(signed));
+    }
+
     public void Dispose()
     {
         Directory.Delete(_directory, recursive: true);

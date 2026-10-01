@@ -53,6 +53,28 @@ public sealed class FilesMaintenanceTests
     }
 
     [Fact]
+    public async Task RetentionHonorsCancellationBeforeDeletingManagedFiles()
+    {
+        using var directory = new TemporaryDirectory();
+        _ = Directory.CreateDirectory(directory.Path);
+        string first = Path.Combine(directory.Path, "logs-2026-09-25.jsonl");
+        string second = Path.Combine(directory.Path, "logs-2026-09-26.jsonl");
+        await File.WriteAllTextAsync(first, "first", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(second, "second", TestContext.Current.CancellationToken);
+        var settings = FilesProviderSettings.FromOptions(
+            CreateOptions(directory.Path, retentionDays: 1, maximumTotalSize: null));
+        using var maintenance = new FilesStorageMaintenance(settings);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        _ = Assert.Throws<OperationCanceledException>(() =>
+            maintenance.Reconcile(new DateOnly(2026, 9, 28), cancellation.Token));
+
+        Assert.True(File.Exists(first));
+        Assert.True(File.Exists(second));
+    }
+
+    [Fact]
     public async Task CapacityLeaseRejectsDoubleCompletionAndAllowsRepeatedDisposal()
     {
         using var directory = new TemporaryDirectory();

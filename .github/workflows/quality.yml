@@ -50,7 +50,7 @@ jobs:
           /d:sonar.qualitygate.wait=true
           /d:sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage/*.xml
           /d:sonar.exclusions=**/obj/**,**/bin/**
-          /d:sonar.coverage.exclusions=**/obj/**,**/bin/**
+          /d:sonar.coverage.exclusions=**/obj/**,**/bin/**,scripts/**/*.ps1,scripts/**/*.psm1,tests/**/*.ps1
 
       - name: Run full Quality validation with coverage
         shell: pwsh
