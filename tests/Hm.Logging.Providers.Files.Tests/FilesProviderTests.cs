@@ -264,6 +264,25 @@ public sealed class FilesProviderTests
     }
 
     [Fact]
+    public async Task RetentionPreservesForeignFilesInsideSourceDirectory()
+    {
+        using var directory = new TemporaryDirectory();
+        string sourceDirectory = Path.Combine(directory.Path, "payments");
+        _ = Directory.CreateDirectory(sourceDirectory);
+        string expired = Path.Combine(sourceDirectory, "payments-2026-09-26.jsonl");
+        string foreign = Path.Combine(sourceDirectory, "keep.txt");
+        await File.WriteAllTextAsync(expired, "old", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(foreign, "keep", TestContext.Current.CancellationToken);
+        using FilesProvider provider = CreateProvider(directory.Path, groupBySource: true, retentionDays: 2);
+
+        await provider.WriteAsync(TestEntries.Create("new", "catalog"), TestContext.Current.CancellationToken);
+
+        Assert.False(File.Exists(expired));
+        Assert.True(File.Exists(foreign));
+        Assert.True(Directory.Exists(sourceDirectory));
+    }
+
+    [Fact]
     public async Task RetentionCanBeDisabled()
     {
         using var directory = new TemporaryDirectory();
@@ -300,6 +319,40 @@ public sealed class FilesProviderTests
         Assert.False(File.Exists(oldest));
         Assert.True(File.Exists(newer));
         Assert.Equal((long)entrySize, new FileInfo(Path.Combine(directory.Path, "logs-2026-09-28.jsonl")).Length);
+    }
+
+    [Fact]
+    public async Task TotalLimitHandlesOldFileGrowthAfterReconciliation()
+    {
+        using var directory = new TemporaryDirectory();
+        _ = Directory.CreateDirectory(directory.Path);
+        string old = Path.Combine(directory.Path, "logs-2026-09-27.jsonl");
+        await File.WriteAllBytesAsync(old, [0], TestContext.Current.CancellationToken);
+        LogEntry entry = TestEntries.Create("capacity after external growth");
+        ulong entrySize = (ulong)JsonLogEntryFormatter.Format(entry).Length;
+        int growthCount = 0;
+        var hooks = new FilesStorageHooks(StreamLockRequested: _ =>
+        {
+            if (Interlocked.Increment(ref growthCount) == 1)
+            {
+                File.WriteAllBytes(old, [0, 1]);
+            }
+        });
+        using FilesProvider provider = CreateProvider(
+            directory.Path,
+            retentionDays: null,
+            maximumFileSize: null,
+            setMaximumFileSize: true,
+            maximumTotalSize: FileSize.FromBytes(entrySize),
+            hooks: hooks);
+
+        await provider.WriteAsync(entry, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, Volatile.Read(ref growthCount));
+        Assert.False(File.Exists(old));
+        Assert.Equal(
+            (long)entrySize,
+            new FileInfo(Path.Combine(directory.Path, "logs-2026-09-28.jsonl")).Length);
     }
 
     [Fact]
