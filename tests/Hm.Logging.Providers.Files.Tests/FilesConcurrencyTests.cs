@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Files.Configuration;
+using Hm.Logging.Providers.Files.Formatting;
 using Xunit;
 
 namespace Hm.Logging.Providers.Files.Tests;
@@ -128,6 +130,93 @@ public sealed class FilesConcurrencyTests
         Assert.Equal(
             (long)entrySize,
             new FileInfo(Path.Combine(directory.Path, "logs-2026-09-28.jsonl")).Length);
+    }
+
+    [Fact]
+    public async Task PartialAppendFailureRestoresPreviousContentAndCapacityForSubsequentWrite()
+    {
+        using var directory = new TemporaryDirectory();
+        LogEntry entry = TestEntries.Create("recoverable append");
+        ulong entrySize = (ulong)JsonLogEntryFormatter.Format(entry).Length;
+        var injectedFailure = new IOException("Injected partial append failure.");
+        int appendCount = 0;
+        int maintenanceCount = 0;
+        var hooks = new FilesStorageHooks(
+            MaintenanceWaitingForWrites: _ => Interlocked.Increment(ref maintenanceCount),
+            AppendAsync: async (stream, content, cancellationToken) =>
+            {
+                if (Interlocked.Increment(ref appendCount) == 2)
+                {
+                    await stream.WriteAsync(content[..(content.Length / 2)], CancellationToken.None);
+                    throw injectedFailure;
+                }
+
+                await stream.WriteAsync(content, cancellationToken);
+            });
+        using var provider = new FilesProvider(
+            CreateOptions(directory.Path, FileSize.FromBytes(checked(entrySize * 2))),
+            new TestTimeProvider(UtcNow),
+            hooks);
+
+        await provider.WriteAsync(entry, TestContext.Current.CancellationToken);
+        IOException failure = await Assert.ThrowsAsync<IOException>(() =>
+            provider.WriteAsync(entry, TestContext.Current.CancellationToken));
+
+        Assert.Same(injectedFailure, failure);
+        string path = Path.Combine(directory.Path, "logs-2026-09-28.jsonl");
+        Assert.Equal((long)entrySize, new FileInfo(path).Length);
+
+        await provider.WriteAsync(entry, TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, Volatile.Read(ref appendCount));
+        Assert.Equal(2, Volatile.Read(ref maintenanceCount));
+        Assert.Equal(checked((long)entrySize * 2), new FileInfo(path).Length);
+        string[] lines = await File.ReadAllLinesAsync(path, TestContext.Current.CancellationToken);
+        Assert.Equal(2, lines.Length);
+        foreach (string line in lines)
+        {
+            using var document = JsonDocument.Parse(line);
+            Assert.Equal("recoverable append", document.RootElement.GetProperty("Message").GetString());
+        }
+    }
+
+    [Fact]
+    public async Task CancellationAfterPartialAppendRestoresPreviousContentAndAllowsContinuation()
+    {
+        using var directory = new TemporaryDirectory();
+        LogEntry entry = TestEntries.Create("cancelled append");
+        ulong entrySize = (ulong)JsonLogEntryFormatter.Format(entry).Length;
+        using var cancellation = new CancellationTokenSource();
+        int appendCount = 0;
+        var hooks = new FilesStorageHooks(AppendAsync: async (stream, content, cancellationToken) =>
+        {
+            if (Interlocked.Increment(ref appendCount) == 2)
+            {
+                await stream.WriteAsync(content[..(content.Length / 2)], CancellationToken.None);
+                cancellation.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            await stream.WriteAsync(content, cancellationToken);
+        });
+        using var provider = new FilesProvider(
+            CreateOptions(directory.Path, FileSize.FromBytes(checked(entrySize * 2))),
+            new TestTimeProvider(UtcNow),
+            hooks);
+
+        await provider.WriteAsync(entry, TestContext.Current.CancellationToken);
+        OperationCanceledException failure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            provider.WriteAsync(entry, cancellation.Token));
+
+        Assert.Equal(cancellation.Token, failure.CancellationToken);
+        string path = Path.Combine(directory.Path, "logs-2026-09-28.jsonl");
+        Assert.Equal((long)entrySize, new FileInfo(path).Length);
+
+        await provider.WriteAsync(entry, TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, Volatile.Read(ref appendCount));
+        Assert.Equal(checked((long)entrySize * 2), new FileInfo(path).Length);
+        Assert.Equal(2, (await File.ReadAllLinesAsync(path, TestContext.Current.CancellationToken)).Length);
     }
 
     private static Task<FilesWriteCoordinator.WriteLease> AcquireAsync(

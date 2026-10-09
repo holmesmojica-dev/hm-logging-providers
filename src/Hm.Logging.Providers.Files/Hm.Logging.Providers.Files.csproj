@@ -4,8 +4,8 @@
     <Title>Hm.Logging Files Provider</Title>
     <Authors>Holmes Mojica</Authors>
     <Company>Holmes Mojica Dev</Company>
-    <Description>File destination provider for HM Logging with UTF-8 JSON Lines and text output, UTC daily files, size-based rotation, retention, and configurable storage limits.</Description>
-    <PackageTags>logging;files;file-logging;jsonl;structured-logging;observability;dotnet</PackageTags>
+    <Description>File destination provider for HM Logging with UTF-8 JSON Lines, text, and CLEF output, UTC daily files, size-based rotation, retention, source grouping, and configurable storage limits.</Description>
+    <PackageTags>logging;files;file-logging;jsonl;clef;structured-logging;observability;dotnet</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>

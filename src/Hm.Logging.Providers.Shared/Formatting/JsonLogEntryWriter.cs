@@ -37,7 +37,7 @@ internal static class JsonLogEntryWriter
         }
     }
 
-    private static void WriteMetadata(Utf8JsonWriter writer, ImmutableDictionary<string, object> metadata)
+    internal static void WriteMetadata(Utf8JsonWriter writer, ImmutableDictionary<string, object> metadata)
     {
         writer.WriteStartObject();
         foreach (KeyValuePair<string, object> item in metadata.OrderBy(item => item.Key, StringComparer.Ordinal))
