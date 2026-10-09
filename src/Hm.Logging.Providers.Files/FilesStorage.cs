@@ -87,8 +87,31 @@ internal sealed class FilesStorage : IDisposable
             FileShare.Read,
             bufferSize: 4096,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
-        _ = stream.Seek(0, SeekOrigin.End);
-        await stream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
+        long originalLength = stream.Seek(0, SeekOrigin.End);
+        try
+        {
+            if (_hooks?.AppendAsync is { } appendAsync)
+            {
+                await appendAsync(stream, content, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await stream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception exception)
+        {
+            var originalException =
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception);
+            try
+            {
+                stream.SetLength(originalLength);
+            }
+            finally
+            {
+                originalException.Throw();
+            }
+        }
     }
 
     private string SelectSegment(string directory, string prefix, DateOnly dateUtc, ulong entrySize)
@@ -143,11 +166,19 @@ internal sealed class FilesStorage : IDisposable
 
     private string GetExtension()
     {
-        return _settings.Format == FilesLogFormat.Json ? "jsonl" : "log";
+        return _settings.Format switch
+        {
+            FilesLogFormat.Json => "jsonl",
+            FilesLogFormat.Text => "log",
+            FilesLogFormat.Clef => "clef",
+            _ => throw new InvalidOperationException(
+                $"The Files provider option 'Format' has unsupported value '{_settings.Format}'.")
+        };
     }
 }
 
 internal sealed record FilesStorageHooks(
     Action<string>? StreamLockRequested = null,
     Action<DateOnly>? MaintenanceWaitingForWrites = null,
-    Func<string, CancellationToken, Task>? BeforeAppendAsync = null);
+    Func<string, CancellationToken, Task>? BeforeAppendAsync = null,
+    Func<FileStream, ReadOnlyMemory<byte>, CancellationToken, ValueTask>? AppendAsync = null);

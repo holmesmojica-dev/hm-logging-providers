@@ -1,4 +1,5 @@
 using Hm.Logging.Providers.Files.Configuration;
+using Hm.Logging.Providers.Files.Formatting;
 using Xunit;
 
 namespace Hm.Logging.Providers.Files.Tests;

@@ -3,7 +3,7 @@ using System.Text;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Shared.Formatting;
 
-namespace Hm.Logging.Providers.Files;
+namespace Hm.Logging.Providers.Files.Formatting;
 
 internal static class TextLogEntryFormatter
 {

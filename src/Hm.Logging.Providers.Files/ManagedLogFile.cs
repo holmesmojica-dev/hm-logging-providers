@@ -122,6 +122,6 @@ internal sealed partial record ManagedLogFile(
         return FileNamePattern.IsMatch($"{value}-2000-01-01.log");
     }
 
-    [GeneratedRegex("^(?<prefix>[a-z0-9]+(?:-[a-z0-9]+)*)-(?<date>[0-9]{4}-[0-9]{2}-[0-9]{2})(?:\\.(?<segment>[1-9][0-9]*))?\\.(?<extension>jsonl|log)$", RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant)]
+    [GeneratedRegex("^(?<prefix>[a-z0-9]+(?:-[a-z0-9]+)*)-(?<date>[0-9]{4}-[0-9]{2}-[0-9]{2})(?:\\.(?<segment>[1-9][0-9]*))?\\.(?<extension>jsonl|log|clef)$", RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant)]
     private static partial Regex MyRegex();
 }

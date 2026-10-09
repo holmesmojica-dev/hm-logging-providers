@@ -64,5 +64,18 @@ public sealed class FilesProviderOptions
     /// Gets or sets the representation written to each physical file. The default is
     /// <see cref="FilesLogFormat.Json"/>.
     /// </summary>
+    /// <remarks>
+    /// <see cref="FilesLogFormat.Json"/> writes HM Logging JSON Lines, <see cref="FilesLogFormat.Text"/> writes
+    /// human-readable text, and <see cref="FilesLogFormat.Clef"/> writes Compact Log Event Format JSON Lines to
+    /// <c>.clef</c> files. The selected format is captured when the provider is registered and is not hot-reloaded.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddLoggingFiles(options =&gt;
+    /// {
+    ///     options.Format = FilesLogFormat.Clef;
+    /// });
+    /// </code>
+    /// </example>
     public FilesLogFormat Format { get; set; } = FilesLogFormat.Json;
 }
