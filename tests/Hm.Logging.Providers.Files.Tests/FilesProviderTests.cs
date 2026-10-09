@@ -4,6 +4,7 @@ using System.Text.Json;
 using Hm.Logging.Enums;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Files.Configuration;
+using Hm.Logging.Providers.Files.Formatting;
 using Xunit;
 
 namespace Hm.Logging.Providers.Files.Tests;

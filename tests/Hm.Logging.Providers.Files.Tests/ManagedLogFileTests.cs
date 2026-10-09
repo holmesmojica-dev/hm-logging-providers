@@ -18,6 +18,7 @@ public sealed class ManagedLogFileTests
     [Theory]
     [InlineData("logs-2026-09-28.1.jsonl", true, 1)]
     [InlineData("logs-2026-09-28.2147483647.log", true, int.MaxValue)]
+    [InlineData("logs-2026-09-28.2.clef", true, 2)]
     [InlineData("logs-2026-09-28.2147483648.jsonl", false, 0)]
     [InlineData("logs-2026-09-28.invalid.jsonl", false, 0)]
     [InlineData("notes.txt", false, 0)]
@@ -53,8 +54,10 @@ public sealed class ManagedLogFileTests
         string overflow = Path.Combine(directory.Path, "logs-2020-01-01.999999999999999999999.jsonl");
         string malformed = Path.Combine(directory.Path, "logs-2020-01-01.invalid.jsonl");
         string ordinary = Path.Combine(directory.Path, "notes.txt");
-        string recognized = Path.Combine(directory.Path, "logs-2020-01-01.1.jsonl");
-        foreach (string path in new[] { overflow, malformed, ordinary, recognized })
+        string recognizedJson = Path.Combine(directory.Path, "logs-2020-01-01.1.jsonl");
+        string recognizedText = Path.Combine(directory.Path, "logs-2020-01-01.log");
+        string recognizedClef = Path.Combine(directory.Path, "logs-2020-01-01.clef");
+        foreach (string path in new[] { overflow, malformed, ordinary, recognizedJson, recognizedText, recognizedClef })
         {
             await File.WriteAllTextAsync(path, "content", TestContext.Current.CancellationToken);
         }
@@ -72,7 +75,9 @@ public sealed class ManagedLogFileTests
         Assert.True(File.Exists(overflow));
         Assert.True(File.Exists(malformed));
         Assert.True(File.Exists(ordinary));
-        Assert.False(File.Exists(recognized));
+        Assert.False(File.Exists(recognizedJson));
+        Assert.False(File.Exists(recognizedText));
+        Assert.False(File.Exists(recognizedClef));
     }
 
     [Theory]

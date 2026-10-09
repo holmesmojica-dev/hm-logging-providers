@@ -1,6 +1,7 @@
 using Hm.Logging.Abstractions;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Files.Configuration;
+using Hm.Logging.Providers.Files.Formatting;
 
 namespace Hm.Logging.Providers.Files;
 
@@ -75,7 +76,9 @@ public sealed class FilesProvider : ILogProvider, IDisposable
     /// <remarks>
     /// The current UTC date and, when enabled, the entry Source select the logical stream. Maintenance is performed
     /// lazily as part of a write. Concurrent writes to the same physical stream are serialized within this provider
-    /// instance.
+    /// instance. If an append reports a failure after changing the file, Files attempts to restore its prior length
+    /// while it still owns that stream; the original failure remains the reported exception. This recovery cannot
+    /// guarantee atomicity across process termination, operating-system failure, or external file modification.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entry"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
