@@ -172,9 +172,9 @@ internal sealed class FilesStorage : IDisposable
             FilesLogFormat.Text => "log",
             FilesLogFormat.Clef => "clef",
             _ => throw new ArgumentOutOfRangeException(
-                nameof(_settings),
-                _settings.Format,
-                $"The Files provider option 'Format' has unsupported value '{_settings.Format}'.")
+                paramName: null,
+                actualValue: _settings.Format,
+                message: $"The Files provider option 'Format' has unsupported value '{_settings.Format}'.")
         };
     }
 }
