@@ -40,8 +40,6 @@ identity contract. See the provider guides for configuration details.
 | --- | --- | --- |
 | Console | [`HDev.Hm.Logging.Providers.Console`](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Console) | Available |
 | Files | [`HDev.Hm.Logging.Providers.Files`](https://www.nuget.org/packages/HDev.Hm.Logging.Providers.Files) | Available |
-| ElasticSearch | — | Planned; detailed architecture pending |
-| EntityFramework | — | Planned; detailed architecture pending |
 
 See the [Console provider guide](src/Hm.Logging.Providers.Console/README.md) and
 [Files provider guide](src/Hm.Logging.Providers.Files/README.md) for provider-specific configuration, output,
