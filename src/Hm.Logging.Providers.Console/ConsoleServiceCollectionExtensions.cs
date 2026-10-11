@@ -1,6 +1,7 @@
 using Hm.Logging.Abstractions;
 using Hm.Logging.Providers.Console;
 using Hm.Logging.Providers.Console.Configuration;
+using Hm.Logging.Providers.Shared.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable IDE0130 // DI extensions intentionally share Core's Hm.Logging.Extensions namespace.
@@ -69,19 +70,14 @@ public static class ConsoleServiceCollectionExtensions
         Action<ConsoleProviderOptions>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(services);
-        Guid? validatedProviderId = providerId != Guid.Empty
-            ? providerId
-            : throw new ArgumentOutOfRangeException(
-                nameof(providerId),
-                providerId,
-                "The Console provider identifier must be a nonempty GUID when supplied.");
+        Guid? validatedProviderId = providerId is null ? null : ProviderIdentity.Resolve(providerId);
 
         var options = new ConsoleProviderOptions();
         configure?.Invoke(options);
         var settings = ConsoleProviderSettings.FromOptions(options);
 
         _ = services.AddSingleton<ILogProvider>(
-            _ => new ConsoleProvider(validatedProviderId ?? Guid.NewGuid(), settings, new SystemConsoleWriter()));
+            _ => new ConsoleProvider(ProviderIdentity.Resolve(validatedProviderId), settings, new SystemConsoleWriter()));
         return services;
     }
 }

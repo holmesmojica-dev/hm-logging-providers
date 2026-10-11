@@ -69,6 +69,41 @@ directly, so Core can normalize the entry and coordinate all registered provider
 validated and captured during registration for that singleton's lifetime. Files does not provide configuration
 hot reload.
 
+## Provider identity and selective routing
+
+Every Files instance exposes an immutable `ProviderId`. The default registration generates a new nonempty
+identifier for the singleton. Supply a stable identifier separately from functional Files options when application
+code needs to route selected entries to this instance:
+
+```csharp
+using Hm.Logging.Extensions;
+using Hm.Logging.Models;
+using Hm.Logging.Providers.Files.Configuration;
+
+Guid filesProviderId = Guid.Parse("860d64bf-99a5-4337-aecd-c97427266f25");
+
+builder.Services
+    .AddHmLogging()
+    .AddLoggingFiles(
+        providerId: filesProviderId,
+        configure: options =>
+        {
+            options.DirectoryPath = "logs";
+            options.Format = FilesLogFormat.Clef;
+        });
+
+await logger.LogAsync(
+    LogEntry.Info("Persist in the selected Files destination"),
+    targetProviders: [filesProviderId],
+    cancellationToken: cancellationToken);
+```
+
+Generated identifiers remain stable for the provider instance's lifetime but are regenerated with a new
+application/provider lifecycle. Direct construction accepts the identity separately as
+`new FilesProvider(options, providerId: filesProviderId)`. An explicitly supplied `Guid.Empty` is rejected with
+`ArgumentOutOfRangeException`. Core continues to dispatch to all registered providers when no target selection is
+supplied.
+
 ## Configuration
 
 Configure every Files option through `AddLoggingFiles`:
@@ -79,7 +114,7 @@ using Hm.Logging.Providers.Files.Configuration;
 
 builder.Services
     .AddHmLogging()
-    .AddLoggingFiles(options =>
+    .AddLoggingFiles(configure: options =>
     {
         options.DirectoryPath = "/var/log/my-application";
         options.GroupBySource = true;
@@ -111,7 +146,7 @@ Unsupported `FilesLogFormat` values and zero-valued file-size limits fail during
 Export CLEF, an open structured event format compatible with monitoring tools such as Seq:
 
 ```csharp
-builder.Services.AddLoggingFiles(options =>
+builder.Services.AddLoggingFiles(configure: options =>
 {
     options.Format = FilesLogFormat.Clef;
 });
@@ -120,7 +155,7 @@ builder.Services.AddLoggingFiles(options =>
 Partition files by source while retaining the default JSON format:
 
 ```csharp
-builder.Services.AddLoggingFiles(options =>
+builder.Services.AddLoggingFiles(configure: options =>
 {
     options.GroupBySource = true;
     options.RetentionDays = 14;
@@ -130,7 +165,7 @@ builder.Services.AddLoggingFiles(options =>
 Use human-readable Text files:
 
 ```csharp
-builder.Services.AddLoggingFiles(options =>
+builder.Services.AddLoggingFiles(configure: options =>
 {
     options.Format = FilesLogFormat.Text;
 });
@@ -139,7 +174,7 @@ builder.Services.AddLoggingFiles(options =>
 Bound both individual files and total managed storage:
 
 ```csharp
-builder.Services.AddLoggingFiles(options =>
+builder.Services.AddLoggingFiles(configure: options =>
 {
     options.MaximumFileSize = FileSize.FromMB(25);
     options.MaximumTotalSize = FileSize.FromGB(1);

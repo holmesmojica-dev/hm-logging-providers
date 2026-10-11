@@ -111,7 +111,7 @@ public sealed class ClefLogEntryFormatterTests
         var services = new ServiceCollection();
         _ = services
             .AddHmLogging()
-            .AddLoggingFiles(options =>
+            .AddLoggingFiles(configure: options =>
             {
                 options.DirectoryPath = directory.Path;
                 options.Format = FilesLogFormat.Clef;

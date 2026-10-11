@@ -2,6 +2,7 @@ using Hm.Logging.Abstractions;
 using Hm.Logging.Enums;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Console.Configuration;
+using Hm.Logging.Providers.Shared.Identity;
 
 namespace Hm.Logging.Providers.Console;
 
@@ -45,12 +46,12 @@ public sealed class ConsoleProvider : ILogProvider, IDisposable
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when an enum option has an unsupported value.</exception>
     public ConsoleProvider(ConsoleProviderOptions options)
-        : this(Guid.NewGuid(), ConsoleProviderSettings.FromOptions(options), new SystemConsoleWriter())
+        : this(ProviderIdentity.Resolve(null), ConsoleProviderSettings.FromOptions(options), new SystemConsoleWriter())
     {
     }
 
     internal ConsoleProvider(ConsoleProviderOptions options, IConsoleWriter writer)
-        : this(Guid.NewGuid(), ConsoleProviderSettings.FromOptions(options), writer)
+        : this(ProviderIdentity.Resolve(null), ConsoleProviderSettings.FromOptions(options), writer)
     {
     }
 
@@ -58,12 +59,7 @@ public sealed class ConsoleProvider : ILogProvider, IDisposable
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
-        ProviderId = providerId != Guid.Empty
-            ? providerId
-            : throw new ArgumentOutOfRangeException(
-                nameof(providerId),
-                providerId,
-                "The Console provider identifier must be a nonempty GUID.");
+        ProviderId = ProviderIdentity.Resolve(providerId);
     }
 
     /// <summary>
