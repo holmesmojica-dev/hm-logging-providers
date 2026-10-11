@@ -2,6 +2,7 @@ using Hm.Logging.Abstractions;
 using Hm.Logging.Models;
 using Hm.Logging.Providers.Files.Configuration;
 using Hm.Logging.Providers.Files.Formatting;
+using Hm.Logging.Providers.Shared.Identity;
 
 namespace Hm.Logging.Providers.Files;
 
@@ -12,7 +13,7 @@ namespace Hm.Logging.Providers.Files;
 /// <para>
 /// This provider performs Files-specific serialization and persistence after Core has validated, normalized, and
 /// enriched an entry. Most applications should register it through
-/// <see cref="Extensions.FilesServiceCollectionExtensions.AddLoggingFiles(Microsoft.Extensions.DependencyInjection.IServiceCollection, Action{FilesProviderOptions}?)"/>.
+/// <see cref="Extensions.FilesServiceCollectionExtensions.AddLoggingFiles(Microsoft.Extensions.DependencyInjection.IServiceCollection, Guid?, Action{FilesProviderOptions}?)"/>.
 /// </para>
 /// <para>
 /// Physical file dates, retention boundaries, and rotation names use UTC. Storage format, source partitioning,
@@ -36,39 +37,56 @@ public sealed class FilesProvider : ILogProvider, IDisposable
     /// <summary>
     /// Gets the immutable identifier used by HM Logging Core to address this provider instance.
     /// </summary>
-    /// <remarks>A new nonempty identifier is generated for each Files provider instance.</remarks>
-    public Guid ProviderId { get; } = Guid.NewGuid();
+    /// <remarks>
+    /// The value is supplied separately from functional Files configuration. When omitted during construction or
+    /// registration, a new nonempty identifier is generated for the provider instance.
+    /// </remarks>
+    public Guid ProviderId { get; }
 
     /// <summary>
     /// Initializes a Files provider and captures the supplied configuration for the provider lifetime.
     /// </summary>
     /// <param name="options">The Files configuration to validate and capture.</param>
+    /// <param name="providerId">
+    /// Optional instance identifier used for selective routing. When omitted, a nonempty identifier is generated.
+    /// </param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when the format is unsupported or a configured file-size limit is zero.
+    /// Thrown when <paramref name="providerId"/> is <see cref="Guid.Empty"/>, the format is unsupported, or a
+    /// configured file-size limit is zero.
     /// </exception>
-    public FilesProvider(FilesProviderOptions options)
-        : this(FilesProviderSettings.FromOptions(options), TimeProvider.System)
+    public FilesProvider(FilesProviderOptions options, Guid? providerId = null)
+        : this(ProviderIdentity.Resolve(providerId), FilesProviderSettings.FromOptions(options), TimeProvider.System)
     {
     }
 
     internal FilesProvider(FilesProviderOptions options, TimeProvider timeProvider)
-        : this(FilesProviderSettings.FromOptions(options), timeProvider, hooks: null)
+        : this(ProviderIdentity.Resolve(null), FilesProviderSettings.FromOptions(options), timeProvider, hooks: null)
     {
     }
 
     internal FilesProvider(FilesProviderOptions options, TimeProvider timeProvider, FilesStorageHooks hooks)
-        : this(FilesProviderSettings.FromOptions(options), timeProvider, hooks)
+        : this(ProviderIdentity.Resolve(null), FilesProviderSettings.FromOptions(options), timeProvider, hooks)
     {
     }
 
     internal FilesProvider(FilesProviderSettings settings, TimeProvider timeProvider)
-        : this(settings, timeProvider, hooks: null)
+        : this(ProviderIdentity.Resolve(null), settings, timeProvider, hooks: null)
     {
     }
 
-    private FilesProvider(FilesProviderSettings settings, TimeProvider timeProvider, FilesStorageHooks? hooks)
+    internal FilesProvider(Guid providerId, FilesProviderSettings settings, TimeProvider timeProvider)
+        : this(providerId, settings, timeProvider, hooks: null)
     {
+    }
+
+    private FilesProvider(
+        Guid providerId,
+        FilesProviderSettings settings,
+        TimeProvider timeProvider,
+        FilesStorageHooks? hooks)
+    {
+        ProviderId = ProviderIdentity.Resolve(providerId);
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _storage = new FilesStorage(settings, timeProvider ?? throw new ArgumentNullException(nameof(timeProvider)), hooks);
     }
