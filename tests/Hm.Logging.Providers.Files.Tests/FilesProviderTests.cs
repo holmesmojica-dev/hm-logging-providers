@@ -16,6 +16,66 @@ public sealed class FilesProviderTests
     private static readonly int[] MetadataArray = [1, 2];
 
     [Fact]
+    public void DirectConstructionGeneratesNonemptyProviderIdentifier()
+    {
+        using var directory = new TemporaryDirectory();
+        using var provider = new FilesProvider(new FilesProviderOptions { DirectoryPath = directory.Path });
+
+        Assert.NotEqual(Guid.Empty, provider.ProviderId);
+    }
+
+    [Fact]
+    public void DirectConstructionUsesExplicitProviderIdentifier()
+    {
+        using var directory = new TemporaryDirectory();
+        var providerId = Guid.NewGuid();
+        using var provider = new FilesProvider(
+            new FilesProviderOptions { DirectoryPath = directory.Path },
+            providerId);
+
+        Assert.Equal(providerId, provider.ProviderId);
+    }
+
+    [Fact]
+    public void SeparateProviderInstancesGenerateDistinctIdentifiers()
+    {
+        using var firstDirectory = new TemporaryDirectory();
+        using var secondDirectory = new TemporaryDirectory();
+        using var firstProvider = new FilesProvider(
+            new FilesProviderOptions { DirectoryPath = firstDirectory.Path });
+        using var secondProvider = new FilesProvider(
+            new FilesProviderOptions { DirectoryPath = secondDirectory.Path });
+
+        Assert.NotEqual(firstProvider.ProviderId, secondProvider.ProviderId);
+    }
+
+    [Fact]
+    public void DirectConstructionRejectsExplicitEmptyProviderIdentifier()
+    {
+        using var directory = new TemporaryDirectory();
+        var options = new FilesProviderOptions { DirectoryPath = directory.Path };
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => new FilesProvider(options, Guid.Empty));
+
+        Assert.Equal("providerId", exception.ParamName);
+    }
+
+    [Fact]
+    public async Task ProviderIdentifierRemainsStableForProviderLifetime()
+    {
+        using var directory = new TemporaryDirectory();
+        var providerId = Guid.NewGuid();
+        using var provider = new FilesProvider(
+            new FilesProviderOptions { DirectoryPath = directory.Path },
+            providerId);
+
+        await provider.WriteAsync(TestEntries.Create("identity"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(providerId, provider.ProviderId);
+    }
+
+    [Fact]
     public async Task DefaultOutputIsBomlessJsonLinesUsingCurrentUtcDay()
     {
         using var directory = new TemporaryDirectory();

@@ -28,7 +28,7 @@ public sealed class FilesDefensiveTests
     {
         _ = Assert.Throws<ArgumentNullException>(() => new FilesProvider(null!));
         _ = Assert.Throws<ArgumentNullException>(() =>
-            new FilesProvider(new FilesProviderOptions(), null!));
+            new FilesProvider(new FilesProviderOptions(), (TimeProvider)null!));
         _ = Assert.Throws<ArgumentNullException>(() =>
             new FilesProvider((FilesProviderSettings)null!, TimeProvider.System));
     }

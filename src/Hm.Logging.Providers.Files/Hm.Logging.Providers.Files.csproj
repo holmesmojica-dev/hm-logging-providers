@@ -36,6 +36,8 @@
   <ItemGroup>
     <Compile Include="..\Hm.Logging.Providers.Shared\Formatting\*.cs"
              Link="Formatting\%(Filename)%(Extension)" />
+    <Compile Include="..\Hm.Logging.Providers.Shared\Identity\*.cs"
+             Link="Identity\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

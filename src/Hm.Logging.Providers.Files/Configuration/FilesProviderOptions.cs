@@ -71,7 +71,7 @@ public sealed class FilesProviderOptions
     /// </remarks>
     /// <example>
     /// <code>
-    /// services.AddLoggingFiles(options =&gt;
+    /// services.AddLoggingFiles(configure: options =&gt;
     /// {
     ///     options.Format = FilesLogFormat.Clef;
     /// });
