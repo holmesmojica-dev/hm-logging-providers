@@ -34,6 +34,12 @@ public sealed class FilesProvider : ILogProvider, IDisposable
     private bool _disposalStarted;
 
     /// <summary>
+    /// Gets the immutable identifier used by HM Logging Core to address this provider instance.
+    /// </summary>
+    /// <remarks>A new nonempty identifier is generated for each Files provider instance.</remarks>
+    public Guid ProviderId { get; } = Guid.NewGuid();
+
+    /// <summary>
     /// Initializes a Files provider and captures the supplied configuration for the provider lifetime.
     /// </summary>
     /// <param name="options">The Files configuration to validate and capture.</param>

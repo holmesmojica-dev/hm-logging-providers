@@ -16,6 +16,10 @@ public static class ConsoleServiceCollectionExtensions
     /// Registers the Console provider as a singleton <see cref="ILogProvider"/>.
     /// </summary>
     /// <param name="services">The service collection to update.</param>
+    /// <param name="providerId">
+    /// Optional instance identifier used for selective routing. When omitted, the singleton receives a generated
+    /// nonempty identifier. An automatically generated identifier is not stable across application lifecycles.
+    /// </param>
     /// <param name="configure">
     /// An optional delegate that configures the provider. When omitted, text output, colors, DateTime timestamps,
     /// multiline exceptions, and default severity-based stream routing are used.
@@ -42,29 +46,42 @@ public static class ConsoleServiceCollectionExtensions
     /// </code>
     /// Configure JSON output when needed:
     /// <code>
-    /// services.AddLoggingConsole(options =&gt;
-    /// {
-    ///     options.Format = ConsoleOutputFormat.Json;
-    ///     options.UseStandardErrorForErrors = true;
-    /// });
+    /// Guid consoleProviderId = Guid.Parse("3c4cecd1-7cc8-4133-82c4-a5165fb4ad46");
+    ///
+    /// services.AddLoggingConsole(
+    ///     providerId: consoleProviderId,
+    ///     configure: options =&gt;
+    ///     {
+    ///         options.Format = ConsoleOutputFormat.Json;
+    ///         options.UseStandardErrorForErrors = true;
+    ///     });
     /// </code>
     /// </example>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when <paramref name="configure"/> assigns an unsupported enum value.
+    /// Thrown when <paramref name="providerId"/> is <see cref="Guid.Empty"/> or
+    /// <paramref name="configure"/> assigns an unsupported enum value.
     /// </exception>
     /// <seealso cref="ConsoleProviderOptions"/>
     public static IServiceCollection AddLoggingConsole(
         this IServiceCollection services,
+        Guid? providerId = null,
         Action<ConsoleProviderOptions>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(services);
+        Guid? validatedProviderId = providerId != Guid.Empty
+            ? providerId
+            : throw new ArgumentOutOfRangeException(
+                nameof(providerId),
+                providerId,
+                "The Console provider identifier must be a nonempty GUID when supplied.");
 
         var options = new ConsoleProviderOptions();
         configure?.Invoke(options);
         var settings = ConsoleProviderSettings.FromOptions(options);
 
-        _ = services.AddSingleton<ILogProvider>(_ => new ConsoleProvider(settings, new SystemConsoleWriter()));
+        _ = services.AddSingleton<ILogProvider>(
+            _ => new ConsoleProvider(validatedProviderId ?? Guid.NewGuid(), settings, new SystemConsoleWriter()));
         return services;
     }
 }

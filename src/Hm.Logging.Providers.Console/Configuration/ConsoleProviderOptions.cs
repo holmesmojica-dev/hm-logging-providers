@@ -5,12 +5,12 @@ namespace Hm.Logging.Providers.Console.Configuration;
 /// </summary>
 /// <remarks>
 /// The provider captures these values when it is constructed or registered. Console V1 does not hot-reload
-/// configuration. Use <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Action{ConsoleProviderOptions}?)"/>
+/// configuration. Use <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Guid?, Action{ConsoleProviderOptions}?)"/>
 /// to configure the singleton provider during service registration.
 /// </remarks>
 /// <example>
 /// <code>
-/// services.AddLoggingConsole(options =&gt;
+/// services.AddLoggingConsole(configure: options =&gt;
 /// {
 ///     options.Format = ConsoleOutputFormat.Json;
 ///     options.UseStandardErrorForErrors = true;

@@ -15,7 +15,7 @@ public sealed class ConsoleRegistrationTests
 
         IServiceCollection returned = services
             .AddHmLogging()
-            .AddLoggingConsole(options => options.UseColors = false);
+            .AddLoggingConsole(configure: options => options.UseColors = false);
 
         Assert.Same(services, returned);
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -32,7 +32,8 @@ public sealed class ConsoleRegistrationTests
         var services = new ServiceCollection();
 
         ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
-            () => services.AddLoggingConsole(options => options.Format = (ConsoleOutputFormat)99));
+            () => services.AddLoggingConsole(
+                configure: options => options.Format = (ConsoleOutputFormat)99));
 
         Assert.Contains("Format", exception.Message);
         Assert.Empty(services);
@@ -43,7 +44,7 @@ public sealed class ConsoleRegistrationTests
     {
         var services = new ServiceCollection();
         ConsoleProviderOptions? capturedOptions = null;
-        _ = services.AddLoggingConsole(options =>
+        _ = services.AddLoggingConsole(configure: options =>
         {
             options.Format = ConsoleOutputFormat.Text;
             capturedOptions = options;
@@ -53,5 +54,32 @@ public sealed class ConsoleRegistrationTests
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         _ = Assert.IsType<ConsoleProvider>(serviceProvider.GetRequiredService<ILogProvider>());
+    }
+
+    [Fact]
+    public void RegistrationExposesExplicitProviderIdentifier()
+    {
+        var providerId = Guid.NewGuid();
+        var services = new ServiceCollection();
+        _ = services.AddLoggingConsole(
+            providerId: providerId,
+            configure: options => options.UseColors = false);
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        ConsoleProvider provider = Assert.IsType<ConsoleProvider>(serviceProvider.GetRequiredService<ILogProvider>());
+        Assert.Equal(providerId, provider.ProviderId);
+    }
+
+    [Fact]
+    public void RegistrationRejectsExplicitEmptyProviderIdentifier()
+    {
+        var services = new ServiceCollection();
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => services.AddLoggingConsole(providerId: Guid.Empty));
+
+        Assert.Equal("providerId", exception.ParamName);
+        Assert.Empty(services);
     }
 }

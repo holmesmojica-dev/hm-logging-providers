@@ -26,6 +26,63 @@ public sealed class ConsoleProviderTests
     }
 
     [Fact]
+    public void ProviderGeneratesNonemptyIdentifierWhenNotConfigured()
+    {
+        using var provider = new ConsoleProvider(new ConsoleProviderOptions(), new RecordingConsoleWriter());
+
+        Assert.NotEqual(Guid.Empty, provider.ProviderId);
+    }
+
+    [Fact]
+    public void ProviderUsesExplicitConfiguredIdentifier()
+    {
+        var providerId = Guid.NewGuid();
+        using var provider = new ConsoleProvider(
+            providerId,
+            ConsoleProviderSettings.FromOptions(new ConsoleProviderOptions()),
+            new RecordingConsoleWriter());
+
+        Assert.Equal(providerId, provider.ProviderId);
+    }
+
+    [Fact]
+    public async Task ProviderIdentifierRemainsStableForProviderLifetime()
+    {
+        var providerId = Guid.NewGuid();
+        var writer = new RecordingConsoleWriter();
+        using var provider = new ConsoleProvider(
+            providerId,
+            ConsoleProviderSettings.FromOptions(new ConsoleProviderOptions()),
+            writer);
+
+        await provider.WriteAsync(CreateEntry(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(providerId, provider.ProviderId);
+    }
+
+    [Fact]
+    public void DistinctProviderInstancesGenerateDistinctIdentifiers()
+    {
+        using var firstProvider = new ConsoleProvider(new ConsoleProviderOptions(), new RecordingConsoleWriter());
+        using var secondProvider = new ConsoleProvider(new ConsoleProviderOptions(), new RecordingConsoleWriter());
+
+        Assert.NotEqual(firstProvider.ProviderId, secondProvider.ProviderId);
+    }
+
+    [Fact]
+    public void ProviderRejectsExplicitEmptyIdentifier()
+    {
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => new ConsoleProvider(
+                Guid.Empty,
+                ConsoleProviderSettings.FromOptions(new ConsoleProviderOptions()),
+                new RecordingConsoleWriter()));
+
+        Assert.Equal("providerId", exception.ParamName);
+        Assert.Contains("nonempty", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task TextOutputUsesOrderedSectionsAndOmitsAbsentValues()
     {
         var writer = new RecordingConsoleWriter();

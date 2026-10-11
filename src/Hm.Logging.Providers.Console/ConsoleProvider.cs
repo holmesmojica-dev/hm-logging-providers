@@ -12,7 +12,7 @@ namespace Hm.Logging.Providers.Console;
 /// <para>
 /// This provider performs Console-specific presentation and stream routing after HM Logging Core has
 /// validated, normalized, and enriched an entry. Most applications should register it through
-/// <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Action{ConsoleProviderOptions}?)"/>
+/// <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Guid?, Action{ConsoleProviderOptions}?)"/>
 /// instead of constructing it directly.
 /// </para>
 /// <para>
@@ -39,26 +39,46 @@ public sealed class ConsoleProvider : ILogProvider, IDisposable
     /// <remarks>
     /// Direct construction is useful outside dependency injection. Applications using
     /// <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/> should normally call
-    /// <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Action{ConsoleProviderOptions}?)"/>.
+    /// <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Guid?, Action{ConsoleProviderOptions}?)"/>.
     /// Changes made to <paramref name="options"/> after construction do not affect this instance.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when an enum option has an unsupported value.</exception>
     public ConsoleProvider(ConsoleProviderOptions options)
-        : this(ConsoleProviderSettings.FromOptions(options), new SystemConsoleWriter())
+        : this(Guid.NewGuid(), ConsoleProviderSettings.FromOptions(options), new SystemConsoleWriter())
     {
     }
 
     internal ConsoleProvider(ConsoleProviderOptions options, IConsoleWriter writer)
-        : this(ConsoleProviderSettings.FromOptions(options), writer)
+        : this(Guid.NewGuid(), ConsoleProviderSettings.FromOptions(options), writer)
     {
     }
 
-    internal ConsoleProvider(ConsoleProviderSettings settings, IConsoleWriter writer)
+    internal ConsoleProvider(Guid providerId, ConsoleProviderSettings settings, IConsoleWriter writer)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        ProviderId = providerId != Guid.Empty
+            ? providerId
+            : throw new ArgumentOutOfRangeException(
+                nameof(providerId),
+                providerId,
+                "The Console provider identifier must be a nonempty GUID.");
     }
+
+    /// <summary>
+    /// Gets the immutable identifier used by HM Logging Core to address this provider instance.
+    /// </summary>
+    /// <value>
+    /// The explicitly supplied identifier, or a generated nonempty identifier when none was supplied at registration.
+    /// </value>
+    /// <remarks>
+    /// Generated identifiers are unique per provider instance but are not stable across application lifecycles.
+    /// Supply an identifier to
+    /// <see cref="Extensions.ConsoleServiceCollectionExtensions.AddLoggingConsole(Microsoft.Extensions.DependencyInjection.IServiceCollection, Guid?, Action{ConsoleProviderOptions}?)"/>
+    /// when a stable value is required for selective provider routing.
+    /// </remarks>
+    public Guid ProviderId { get; }
 
     /// <summary>
     /// Formats and writes a normalized log entry to the configured process standard stream.
