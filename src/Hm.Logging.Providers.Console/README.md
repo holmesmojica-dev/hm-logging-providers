@@ -46,7 +46,7 @@ using Hm.Logging.Providers.Console.Configuration;
 
 services
     .AddHmLogging()
-    .AddLoggingConsole(options =>
+    .AddLoggingConsole(configure: options =>
     {
         options.Format = ConsoleOutputFormat.Json;
         options.UseStandardErrorForErrors = true;
@@ -74,6 +74,38 @@ Text timestamp formats use the normalized UTC entry timestamp:
 - `Time`: `HH:mm:ss.fff`
 
 Unsupported enum values fail during configuration with `ArgumentOutOfRangeException`.
+
+## Provider identity and selective routing
+
+Every Console instance exposes an immutable `ProviderId`. The default registration generates a nonempty identifier
+for that singleton. Configure a known identifier when application code needs to route selected entries to this
+specific Console instance:
+
+```csharp
+using Hm.Logging.Extensions;
+using Hm.Logging.Models;
+
+Guid consoleProviderId = Guid.Parse("3c4cecd1-7cc8-4133-82c4-a5165fb4ad46");
+
+services
+    .AddHmLogging()
+    .AddLoggingConsole(
+        providerId: consoleProviderId,
+        configure: options =>
+        {
+            options.UseColors = false;
+        });
+
+await logger.LogAsync(
+    LogEntry.Info("Visible only in the selected destination"),
+    targetProviders: [consoleProviderId],
+    cancellationToken: cancellationToken);
+```
+
+Generated identifiers remain stable for the provider instance's lifetime but are regenerated with a new
+application/provider lifecycle. Retain an explicitly configured identifier when routing decisions must remain
+stable. Core continues to dispatch to all registered providers when no target selection is supplied.
+An explicitly supplied `Guid.Empty` is rejected with `ArgumentOutOfRangeException`.
 
 ## Output
 
