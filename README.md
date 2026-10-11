@@ -29,7 +29,10 @@ services
 ```
 
 Providers do not depend on one another, HM Logging Contracts, or a logging service implementation. Multiple
-providers can coexist, and Core dispatches each normalized entry to every registered `ILogProvider`.
+providers can coexist, and Core dispatches each normalized entry to every registered `ILogProvider` by default.
+Each provider instance exposes an immutable `ProviderId`. Console accepts an explicit identifier through its
+registration contract when an application needs stable selective routing through Core. See the provider guides for
+configuration details.
 
 ## Provider catalog
 

@@ -54,7 +54,7 @@ function Write-TestArtifacts {
     $packagePath = Join-Path $Directory "$PackageId.$Version.nupkg"
     $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
     try {
-        $nuspec = "<package><metadata><id>$PackageId</id><version>$Version</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$SourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.2'/></group></dependencies></metadata></package>"
+        $nuspec = "<package><metadata><id>$PackageId</id><version>$Version</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$SourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.3'/></group></dependencies></metadata></package>"
         Add-ZipEntry $package "$PackageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
         Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
         Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))
