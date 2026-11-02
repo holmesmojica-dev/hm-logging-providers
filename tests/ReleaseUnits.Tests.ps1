@@ -12,6 +12,7 @@ Assert-Equal 'console' $release.ReleaseUnit
 Assert-Equal '1.2.3-preview.4' $release.ReleaseVersion
 Assert-Equal 'src/Hm.Logging.Providers.Console/Hm.Logging.Providers.Console.csproj' $release.Project
 Assert-Equal 'HDev.Hm.Logging.Providers.Console' $release.PackageId
+Assert-Equal '1.0.0-preview.4' $release.CoreDependencyVersion
 Assert-Equal $true $release.PublicationEnabled
 
 foreach ($version in @('2.7.4-preview.9', '3.0.0', '42.1.0-rc.2')) {
@@ -31,6 +32,7 @@ foreach ($version in @('0.1.0-preview.1', '1.0.0', '8.13.21-rc.3')) {
     Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $files.Project
     Assert-Equal 'HDev.Hm.Logging.Providers.Files' $files.PackageId
     Assert-Equal 'Hm.Logging.Providers.Files' $files.AssemblyName
+    Assert-Equal '1.0.0-preview.3' $files.CoreDependencyVersion
     Assert-Equal $true $files.PublicationEnabled
 }
 
