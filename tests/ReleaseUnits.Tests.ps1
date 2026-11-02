@@ -32,7 +32,7 @@ foreach ($version in @('0.1.0-preview.1', '1.0.0', '8.13.21-rc.3')) {
     Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $files.Project
     Assert-Equal 'HDev.Hm.Logging.Providers.Files' $files.PackageId
     Assert-Equal 'Hm.Logging.Providers.Files' $files.AssemblyName
-    Assert-Equal '1.0.0-preview.3' $files.CoreDependencyVersion
+    Assert-Equal '1.0.0-preview.4' $files.CoreDependencyVersion
     Assert-Equal $true $files.PublicationEnabled
 }
 

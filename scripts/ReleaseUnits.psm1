@@ -21,7 +21,7 @@ function Get-HmProviderReleaseUnit {
             Project = 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj'
             PackageId = 'HDev.Hm.Logging.Providers.Files'
             AssemblyName = 'Hm.Logging.Providers.Files'
-            CoreDependencyVersion = '1.0.0-preview.3'
+            CoreDependencyVersion = '1.0.0-preview.4'
             PublicationEnabled = $true
         }
     }
