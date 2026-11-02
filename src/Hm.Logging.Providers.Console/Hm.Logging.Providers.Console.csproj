@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HDev.Hm.Logging.Core" />
+    <PackageReference Include="HDev.Hm.Logging.Core" VersionOverride="1.0.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
   </ItemGroup>

@@ -47,6 +47,7 @@ function Write-TestArtifacts {
         [string]$RepositoryRoot,
         [string]$PackageId,
         [string]$AssemblyName,
+        [string]$CoreDependencyVersion,
         [string]$Version,
         [string]$SourceCommit
     )
@@ -54,7 +55,7 @@ function Write-TestArtifacts {
     $packagePath = Join-Path $Directory "$PackageId.$Version.nupkg"
     $package = [IO.Compression.ZipFile]::Open($packagePath, 'Create')
     try {
-        $nuspec = "<package><metadata><id>$PackageId</id><version>$Version</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$SourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='1.0.0-preview.3'/></group></dependencies></metadata></package>"
+        $nuspec = "<package><metadata><id>$PackageId</id><version>$Version</version><license type='expression'>MIT</license><icon>icon.png</icon><readme>README.md</readme><repository commit='$SourceCommit'/><dependencies><group targetFramework='net10.0'><dependency id='HDev.Hm.Logging.Core' version='$CoreDependencyVersion'/></group></dependencies></metadata></package>"
         Add-ZipEntry $package "$PackageId.nuspec" ([Text.Encoding]::UTF8.GetBytes($nuspec))
         Add-ZipEntry $package 'README.md' ([Text.Encoding]::UTF8.GetBytes('readme'))
         Add-ZipEntry $package 'LICENSE' ([Text.Encoding]::UTF8.GetBytes('license'))
@@ -105,7 +106,7 @@ try {
 
     [IO.File]::WriteAllText((Join-Path $isolatedScripts 'ReleaseUnits.psm1'), $releaseUnits, [Text.UTF8Encoding]::new($false))
 
-    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $packageId -AssemblyName $assemblyName -Version $releaseVersion -SourceCommit $sourceCommit
+    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $packageId -AssemblyName $assemblyName -CoreDependencyVersion '1.0.0-preview.4' -Version $releaseVersion -SourceCommit $sourceCommit
 
     Import-Module (Join-Path $isolatedScripts 'NuGetPublication.psm1') -Force
     Assert-ThrowsLike {
@@ -126,7 +127,7 @@ try {
     $filesPackageId = 'HDev.Hm.Logging.Providers.Files'
     $filesAssemblyName = 'Hm.Logging.Providers.Files'
     $filesReleaseVersion = '2.3.4-preview.5'
-    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $filesPackageId -AssemblyName $filesAssemblyName -Version $filesReleaseVersion -SourceCommit $sourceCommit
+    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $filesPackageId -AssemblyName $filesAssemblyName -CoreDependencyVersion '1.0.0-preview.3' -Version $filesReleaseVersion -SourceCommit $sourceCommit
     $filesUnit = Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit files -ReleaseVersion $filesReleaseVersion -SourceCommit $sourceCommit
     Assert-Equal 'files' $filesUnit.Name
     Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $filesUnit.Project
