@@ -13,6 +13,7 @@ function Get-HmProviderReleaseUnit {
             Project = 'src/Hm.Logging.Providers.Console/Hm.Logging.Providers.Console.csproj'
             PackageId = 'HDev.Hm.Logging.Providers.Console'
             AssemblyName = 'Hm.Logging.Providers.Console'
+            CoreDependencyVersion = '1.0.0-preview.4'
             PublicationEnabled = $true
         }
         files = [pscustomobject]@{
@@ -20,6 +21,7 @@ function Get-HmProviderReleaseUnit {
             Project = 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj'
             PackageId = 'HDev.Hm.Logging.Providers.Files'
             AssemblyName = 'Hm.Logging.Providers.Files'
+            CoreDependencyVersion = '1.0.0-preview.3'
             PublicationEnabled = $true
         }
     }
@@ -90,6 +92,7 @@ function Resolve-HmProviderReleaseTag {
         Project = $unit.Project
         PackageId = $unit.PackageId
         AssemblyName = $unit.AssemblyName
+        CoreDependencyVersion = $unit.CoreDependencyVersion
         PublicationEnabled = $unit.PublicationEnabled
     }
 }
