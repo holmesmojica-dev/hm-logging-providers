@@ -127,7 +127,7 @@ try {
     $filesPackageId = 'HDev.Hm.Logging.Providers.Files'
     $filesAssemblyName = 'Hm.Logging.Providers.Files'
     $filesReleaseVersion = '2.3.4-preview.5'
-    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $filesPackageId -AssemblyName $filesAssemblyName -CoreDependencyVersion '1.0.0-preview.3' -Version $filesReleaseVersion -SourceCommit $sourceCommit
+    Write-TestArtifacts -Directory $packageDirectory -RepositoryRoot $root -PackageId $filesPackageId -AssemblyName $filesAssemblyName -CoreDependencyVersion '1.0.0-preview.4' -Version $filesReleaseVersion -SourceCommit $sourceCommit
     $filesUnit = Assert-HmProviderNuGetPublicationPrerequisites -PackageDirectory $packageDirectory -ReleaseUnit files -ReleaseVersion $filesReleaseVersion -SourceCommit $sourceCommit
     Assert-Equal 'files' $filesUnit.Name
     Assert-Equal 'src/Hm.Logging.Providers.Files/Hm.Logging.Providers.Files.csproj' $filesUnit.Project
